@@ -274,7 +274,9 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
                     tpos += theight;
                 canvas->translate(tpos, text_points[0].y());
                 canvas->rotate(-90);
-                SkTextUtils::Draw(canvas,texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, 0, 0, font, paint, text_points[1].y()>text_points[0].y()?SkTextUtils::kRight_Align:SkTextUtils::kLeft_Align);
+                float twidth = text_points[1].y()-text_points[0].y();
+                canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, font, paint);
+
                 canvas->restore();
 
             }                
@@ -286,7 +288,8 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
                 if(theight < 0)
                     tpos += theight;
                 canvas->translate(text_points[0].x(), tpos);
-                SkTextUtils::Draw(canvas,texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, 0, 0, font, paint, text_points[1].x()<text_points[0].x()?SkTextUtils::kRight_Align:SkTextUtils::kLeft_Align);
+                float twidth = text_points[1].x()-text_points[0].x();
+                canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, font, paint);
                 canvas->restore();
 
             }        
