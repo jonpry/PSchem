@@ -68,11 +68,7 @@ MainWindow::MainWindow(int argc, char** argv, void* platformData)
     typeface = SkTypeface::MakeFromName("Arial",SkFontStyle());
     font = SkFont(typeface);
     font.setSubpixel(true);
-    font.setSize(80);
-    
-    zoom=0;
-    ctr_x=0;
-    ctr_y=0;
+    font.setSize(80);    
 }
 
 MainWindow::~MainWindow() {
@@ -85,14 +81,10 @@ void MainWindow::updateTitle() {
         return;
     }
 
-    SkString title("Hello World ");
-    if (Window::kRaster_BackendType == fBackendType) {
-        title.append("Raster");
-    } else {
-        title.append("GL");
-    }
+    fWindow->setTitle("PSchem");
+    
+    view_mat = view_mat.Translate(fWindow->width()/2,fWindow->height()/2);
 
-    fWindow->setTitle(title.c_str());
 }
 
 void MainWindow::onBackendCreated() {
@@ -101,31 +93,26 @@ void MainWindow::onBackendCreated() {
     fWindow->inval();
 }
 
+
 void MainWindow::onPaint(SkSurface* surface) {
     auto canvas = surface->getCanvas();
 
     // Clear background
     canvas->clear(SK_ColorBLACK);
     canvas->save();
-    canvas->translate(fWindow->width()/2,fWindow->height()/2);
+    canvas->setMatrix(view_mat);
 
     SkPaint paint;
     paint.setColor(SK_ColorGRAY);
     paint.setStrokeWidth(1);
     paint.setStyle(SkPaint::Style::kStroke_Style);
 
-
-    canvas->translate(ctr_x*pow(2,-zoom/10.0f),ctr_y*pow(2,-zoom/10.0f));
-
     canvas->drawLine(0,-5000,0,5000,paint);
     canvas->drawLine(-5000,0,5000,0,paint);
 
-    canvas->scale(pow(2,-zoom/10.0f), pow(2,-zoom/10.0f));
-
-    SkMatrix view_mat = canvas->getLocalToDeviceAs3x3();
     view_mat.invert(&inverse_view_mat);
 
-    Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
+    Drawing &drawing = getDrawing("letters.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
     drawDrawing(drawing,canvas);    
     canvas->restore();
     this->drawImGui();
@@ -142,40 +129,28 @@ void MainWindow::drawImGui() {
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {
     mouse_x = x;
     mouse_y = y;
-    
-    float mdx = (mouse_x - fWindow->width()/2)/pow(2,-zoom/10.0f) - ctr_x;
-    printf("%f, %d %f\n", mdx, mouse_x, ctr_x);
-
     return true;
 }
 
 bool MainWindow::onMouseWheel(float delta, skui::ModifierKey modifiers) {
     fWindow->inval();
-    if(delta<0){
-        float delta_zoom = pow(2,-(zoom+delta)/10.0f)/pow(2,-zoom/10.0f) - 1.0;
-        float mdx = (mouse_x - fWindow->width()/2)/pow(2,-zoom/10.0f) - ctr_x;
-        float mdy = (mouse_y - fWindow->height()/2)/pow(2,-zoom/10.0f) - ctr_y;
-        
-        printf("%f: %f, %f, %d %f\n", delta_zoom, mdx, mdy, mouse_x, ctr_x);
-        ctr_x -= mdx * delta_zoom ;
-        ctr_y -= mdy * delta_zoom ;
-
-//        ctr_x += mdx*pow(2,-(zoom)/10.0f);
-//        ctr_y += mdy*pow(2,-(zoom)/10.0f);
-    }
     
-    zoom+=delta;
+    float scale = delta>0?1.1:0.9;
+    view_mat = view_mat.postTranslate(-mouse_x,-mouse_y);    
+    view_mat = view_mat.postScale(scale,scale);
+    view_mat = view_mat.postTranslate(mouse_x,mouse_y);    
     return true;
 }
 
 bool MainWindow::onKey(skui::Key key, skui::InputState state, skui::ModifierKey modifiers) {
     if(state != skui::InputState::kDown)
         return false;
+    float t=20;
     switch(key){
-        case skui::Key::kLeft: ctr_x -= fWindow->width() * pow(2,zoom/10.0f) / 50; break;
-        case skui::Key::kRight: ctr_x += fWindow->width() * pow(2,zoom/10.0f) / 50; break;
-        case skui::Key::kUp: ctr_y -= fWindow->height() * pow(2,zoom/10.0f) / 50; break;
-        case skui::Key::kDown: ctr_y += fWindow->height() * pow(2,zoom/10.0f) / 50; break;
+        case skui::Key::kLeft: view_mat = view_mat.postTranslate(-t,0.0); break;
+        case skui::Key::kRight: view_mat = view_mat.postTranslate(t,0.0); break;
+        case skui::Key::kUp: view_mat = view_mat.postTranslate(0.0,-t); break;
+        case skui::Key::kDown: view_mat = view_mat.postTranslate(0.0,t); break;
         default: break;
     }
     fWindow->inval();
@@ -249,16 +224,12 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
         canvas->save();
         paint.setStrokeWidth(0.25);
         
+        canvas->translate(t.x,t.y);
+        canvas->rotate(t.rot*90);
+
         SkMatrix cmat = canvas->getLocalToDeviceAs3x3();
         SkMatrix to_world =  inverse_view_mat * cmat;
        // to_world.dump();
-
-    	canvas->drawLine(t.x, t.y-2, t.x, t.y+2, paint);
-    	canvas->drawLine(t.x-2, t.y, t.x+2, t.y, paint);
-
-        paint.setColor(SkColorSetARGB(40,0,255,0));
-
-    
 
     
         font.setSize(t.size*50);
@@ -274,27 +245,55 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
         }
         float twidth = max_width;
         float theight = font.getSpacing() * texts.size();
-        
-        float xpos = t.x;
-        
-        if(t.rot==2){
-            theight *= -1;
-            twidth *= -1;
-        }
+
         if(t.mirror)
             twidth *= -1;
-                    
-	    SkRect rect = SkRect::MakeXYWH(xpos, t.y, twidth,theight);
+       
+        SkPoint text_points[4] = {{0,0},{twidth,0},{0,theight},{twidth,theight}};
+        to_world.mapPoints(text_points,text_points,4);
+        printf("%f, %f\n", text_points[0].x(), text_points[0].y());
+
+        canvas->save();
+        canvas->setMatrix(view_mat);
+    	canvas->drawLine(text_points[0].x()-2, text_points[0].y(), text_points[0].x()+2, text_points[0].y(), paint);
+    	canvas->drawLine(text_points[0].x(), text_points[0].y()-2, text_points[0].x(), text_points[0].y()+2, paint);
+
+	    SkRect rect = SkRect::MakeLTRB(text_points[0].x(), text_points[0].y(), text_points[3].x(),text_points[3].y());
+        paint.setColor(SkColorSetARGB(40,0,255,0));
         canvas->drawRect(rect,paint);
 
         paint.setColor(SK_ColorGREEN);
-//        printf("%f %f %f %f %f %f\n", font.getSize(), font.getSpacing(), metrics.fDescent, metrics.fAscent, metrics.fLeading, (font.getSpacing() - (metrics.fDescent - metrics.fAscent)) / 2);
-        for(int i=0; i < texts.size(); i++){
-            float tpos = t.y+(i+1)*font.getSpacing() - metrics.fDescent;
-            if(theight < 0)
-                tpos += theight;
-            SkTextUtils::Draw(canvas,texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, xpos, tpos, font, paint, twidth<0?SkTextUtils::kRight_Align:SkTextUtils::kLeft_Align);
+        bool isVert = abs(text_points[1].y() - text_points[0].y())>EPS;
+
+        if(isVert){
+            for(int i=0; i < texts.size(); i++){
+                canvas->save();
+                float tpos = (i+1)*font.getSpacing() - metrics.fDescent + text_points[0].x();
+                float theight = text_points[2].x() - text_points[0].x();
+                if(theight < 0)
+                    tpos += theight;
+                canvas->translate(tpos, text_points[0].y());
+                canvas->rotate(-90);
+                SkTextUtils::Draw(canvas,texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, 0, 0, font, paint, text_points[1].y()>text_points[0].y()?SkTextUtils::kRight_Align:SkTextUtils::kLeft_Align);
+                canvas->restore();
+
+            }                
+        }else{
+            for(int i=0; i < texts.size(); i++){
+                canvas->save();
+                float tpos = (i+1)*font.getSpacing() - metrics.fDescent + text_points[0].y();
+                float theight = text_points[2].y() - text_points[0].y();
+                if(theight < 0)
+                    tpos += theight;
+                canvas->translate(text_points[0].x(), tpos);
+                SkTextUtils::Draw(canvas,texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, 0, 0, font, paint, text_points[1].x()<text_points[0].x()?SkTextUtils::kRight_Align:SkTextUtils::kLeft_Align);
+                canvas->restore();
+
+            }        
         }
+        canvas->restore();
+
+//        printf("%f %f %f %f %f %f\n", font.getSize(), font.getSpacing(), metrics.fDescent, metrics.fAscent, metrics.fLeading, (font.getSpacing() - (metrics.fDescent - metrics.fAscent)) / 2);
         canvas->restore();
     }
 
