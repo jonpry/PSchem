@@ -14,8 +14,6 @@
 #include <string>
 #include <map>
 
-#define EPS 1e-6
-
 using namespace std;
 
 class SkSurface;
@@ -41,12 +39,12 @@ private:
     sk_app::Window::BackendType fBackendType;
 
     SkScalar fRotationAngle;
+    SkColor colorMap[22];
     
     void drawImGui();
 
     sk_sp<SkTypeface> typeface;
-    SkFont font;
-    SkMatrix inverse_view_mat, view_mat;
+    DrawContext ctx;
     int mouse_x, mouse_y;
     
     Drawing& getDrawing(string fname);
