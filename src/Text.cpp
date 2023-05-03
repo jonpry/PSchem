@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
+#include <any>
 #include "include/core/SkFontMetrics.h"
 
 using namespace std;
@@ -21,7 +22,11 @@ std::vector<std::string> split(const std::string& target, char c)
 }
 
 
-Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size) : text(_text), x(_x), y(_y), rot(_rot), mirror(_mirror), size(_size) {}
+Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size, std::map<std::string,std::any> _props) : text(_text), x(_x), y(_y), rot(_rot), mirror(_mirror), size(_size), props(_props) {
+    layer = COLOR_TEXT;
+    if(props.find("layer") != props.end())
+        layer = (int)std::any_cast<float>(props["layer"]);
+}
 
 void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
     canvas->save();

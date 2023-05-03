@@ -171,7 +171,8 @@ Drawing &MainWindow::getDrawing(string fname){
     if(drawings.find(fname) != drawings.end())
         return drawings.at(fname);
         
-    drawings.emplace(fname,fname);
+    Drawing drawing(fname);
+    drawings.emplace(fname,drawing);
     return drawings.at(fname);
 }
 
@@ -202,11 +203,13 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
         c.draw(canvas,paint,ctx);
 	}
 
+    paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto b : drawing.boxes){
         paint.setColor(colorMap[b.layer]);
         b.draw(canvas,paint,ctx);
     }
 
+    paint.setStyle(SkPaint::Style::kStroke_Style);
     for(auto p : drawing.polys){
         paint.setColor(colorMap[p.layer]);
         p.draw(canvas,paint,ctx);
@@ -215,7 +218,7 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
 
     paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto t : drawing.texts){
-        paint.setColor(colorMap[COLOR_TEXT]);
+        paint.setColor(colorMap[t.layer]);
         t.draw(canvas,paint,ctx);
     }
 
@@ -227,7 +230,6 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
         if(c.mirror)
             canvas->scale(-1,1);
 
-        printf("%d %d\n", c.mirror, c.rot);
         drawDrawing(subDrawing,canvas);
         canvas->restore();
     }

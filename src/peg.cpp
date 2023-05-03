@@ -19,9 +19,16 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
 
     parser parser(R"(
         Prog        <- (Stmt LINE_BREAK)* Stmt?
-        Stmt        <- RECORD_ID Field+
-        Field       <- NUMBER / BraceList
+        Stmt        <- RECORD_ID BraceList? NUMBER* Dict?
         BraceList   <- '{' PROP_STRING '}'
+        Dict        <- '{' Item* '}'
+        Item        <- KEY '=' (Value/QUOTED_STRING) LINE_BREAK?
+        KEY         <- < [a-zA-Z]+ >
+        Value       <- NUMBER/BOOL/STRING
+        STRING      <- < [a-zA-Z0-9_]+ >
+        BOOL        <- 'true' / 'false'
+        QUOTED_STRING <-   < ["] (!'"' .)* ["] >
+        
         PROP_STRING <- < (!'}' .)* >
         NUMBER      <- < [-]?[0-9]+[.]?[0-9]* >
         RECORD_ID   <- < [a-zA-Z] >
@@ -52,12 +59,33 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
         return vs[0];  
     };
 
-    parser["NUMBER"] = [&](const SemanticValues &vs) {
-        return vs.token_to_number<float>();   
+    parser["Dict"] = [&](const SemanticValues &vs) {
+        map<string,any> ret;
+        for(int i=0; i < vs.size(); i++){
+            auto p = any_cast<pair<string,any>>(vs[i]);
+            ret[p.first] = p.second;
+        }
+        return ret;
+    };
+    
+    parser["Item"] = [&](const SemanticValues &vs) {
+        return make_pair(any_cast<string>(vs[0]),vs[1]);
+    };
+    
+    parser["KEY"] = [&](const SemanticValues &vs) { 
+        return string(vs.sv());       
     };
 
-    parser["Field"] = [&](const SemanticValues &vs) {
-        return vs[0];  
+    parser["QUOTED_STRING"] = [&](const SemanticValues &vs) { 
+        return string(vs.sv());       
+    };
+
+    parser["BOOL"] = [&](const SemanticValues &vs) { 
+        return (bool)(string(vs.sv()) == "true"?1:0);       
+    };
+    
+    parser["NUMBER"] = [&](const SemanticValues &vs) {
+        return vs.token_to_number<float>();   
     };
 
     parser["RECORD_ID"] = [&](const SemanticValues &vs) {
@@ -79,8 +107,19 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
         for(auto f : statement.fields){
             if(f.type() == typeid(float))
                 printf("%f ", any_cast<float>(f));
-            else
+            else if(f.type() == typeid(string))
                 printf("%s ", any_cast<string>(f).c_str());
+            else{ //map
+                auto d = any_cast<map<string,any>>(f);
+                for(auto p : d){
+                    if(p.second.type() == typeid(string))
+                        printf("%s=%s ", p.first.c_str(), any_cast<string>(p.second).c_str());
+                    else if(p.second.type() == typeid(float))
+                        printf("%s=%d ", p.first.c_str(), any_cast<float>(p.second));
+                    else if(p.second.type() == typeid(bool))
+                        printf("%s=%s ", p.first.c_str(), any_cast<bool>(p.second)?"BOOL_true":"BOOL_false");
+                }
+            }
         }
         printf("\n");
         
@@ -122,7 +161,8 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
                               any_cast<float>(statement.fields[2]),
                               (int)any_cast<float>(statement.fields[3]),
                               (int)any_cast<float>(statement.fields[4]),
-                              any_cast<float>(statement.fields[5])});
+                              any_cast<float>(statement.fields[5]),
+                              any_cast<map<string,any>>(statement.fields[7])});                              
         }
 
         if(statement.id == "C "){

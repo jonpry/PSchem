@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <any>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkFont.h"
@@ -24,12 +26,14 @@ class IDrawable {
 
 class Text : IDrawable{
  public:
-    Text(std::string text, float x, float y, int rot, int mirrot, float size);
+    Text(std::string text, float x, float y, int rot, int mirrot, float size, std::map<std::string,std::any> props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
+    std::map<std::string,std::any> props;
     std::string text;
     float x, y, size;
     int rot, mirror;
+    int layer;
  private:
 };
 
