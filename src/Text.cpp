@@ -35,6 +35,7 @@ static std::string replace(std::string &input, anydict_t &props){
                     ret.push_back('@');
                     ret.insert(ret.end(),key.begin(),key.end());
                 }
+                key.clear();
                 if(i != input.size() - 1)
                     ret.push_back(' ');
                 break;

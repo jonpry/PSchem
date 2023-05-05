@@ -60,7 +60,7 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
     vector<Statement> statements;
 
     parser["PROP_STRING"] = [&](const SemanticValues &vs) {
-        return string(vs.sv())  ;   
+        return string(vs.token());   
     };
 
     parser["BraceList"] = [&](const SemanticValues &vs) {
@@ -81,19 +81,23 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
     };
     
     parser["KEY"] = [&](const SemanticValues &vs) { 
-        return string(vs.sv());       
+        return string(vs.token());       
     };
 
     parser["QUOTED_STRING"] = [&](const SemanticValues &vs) { 
-        return string(vs.sv());       
+        string ret(vs.token());   
+        ret = ret.substr(1,ret.size()-2);
+        return ret;    
     };
 
     parser["STRING"] = [&](const SemanticValues &vs) { 
-        return string(vs.sv());       
+        string ret(vs.token());
+        assert(ret.find(" ") == -1);
+        return ret;       
     };
     
     parser["BOOL"] = [&](const SemanticValues &vs) { 
-        return (bool)(string(vs.sv()) == "true"?1:0);       
+        return (bool)(string(vs.token()) == "true"?1:0);       
     };
 
     parser["NUMBER"] = [&](const SemanticValues &vs) {
@@ -136,7 +140,7 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
                 auto d = any_cast<map<string,any>>(f);
                 for(auto p : d){
                     if(p.second.type() == typeid(string))
-                        printf("%s=%s ", p.first.c_str(), any_cast<string>(p.second).c_str());
+                        printf("%s=\"%s\" ", p.first.c_str(), any_cast<string>(p.second).c_str());
                     else if(p.second.type() == typeid(float))
                         printf("%s=%f ", p.first.c_str(), any_cast<float>(p.second));
                     else if(p.second.type() == typeid(int))
