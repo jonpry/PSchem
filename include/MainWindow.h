@@ -18,6 +18,8 @@ using namespace std;
 
 class SkSurface;
 
+namespace pschem {
+
 class MainWindow : public sk_app::Application, sk_app::Window::Layer {
 public:
     MainWindow(int argc, char** argv, void* platformData);
@@ -52,4 +54,4 @@ private:
     map<string,Drawing> drawings;
 };
 
-
+}; //Namespace pschem

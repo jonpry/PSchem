@@ -10,6 +10,8 @@
 
 #define EPS 1e-6
 
+namespace pschem {
+
 enum { COLOR_BG, COLOR_NET, COLOR_SEL, COLOR_TEXT, COLOR_SYM, COLOR_PIN};
 
 typedef std::map<std::string,std::any> anydict_t;
@@ -116,4 +118,4 @@ class Drawing {
     std::vector<Component> components;
 };
 
-
+}; //Namespace pschem

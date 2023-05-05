@@ -7,6 +7,7 @@
 
 using namespace std;
 
+namespace pschem {
 
 Poly::Poly(int _layer, int npoints, anydict_t props) : Drawable(props), layer(_layer) {
     xs.resize(npoints);
@@ -26,3 +27,5 @@ void Poly::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
 
     canvas->drawPath(path,paint);
 }
+
+}; //Namespace pschem

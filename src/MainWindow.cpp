@@ -30,12 +30,16 @@
 using namespace sk_app;
 
 Application* Application::Create(int argc, char** argv, void* platformData) {
-    return new MainWindow(argc, argv, platformData);
+    return new pschem::MainWindow(argc, argv, platformData);
 }
+
+namespace pschem {
 
 MainWindow::MainWindow(int argc, char** argv, void* platformData)
         : fBackendType(Window::kNativeGL_BackendType),
         fRotationAngle(0) {
+  
+  
     SkGraphics::Init();
 
     DisplayParams displayParams;
@@ -238,3 +242,4 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas, anydict_t &prop
 	canvas->restore();
 }
 
+}; //Namespace pschem

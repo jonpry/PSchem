@@ -8,6 +8,8 @@
 
 using namespace std;
 
+namespace pschem {
+
 static std::string toString(std::any any){
     if(any.type() == typeid(std::string))
         return std::any_cast<string>(any);
@@ -152,3 +154,5 @@ void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
 //        printf("%f %f %f %f %f %f\n", font.getSize(), font.getSpacing(), metrics.fDescent, metrics.fAscent, metrics.fLeading, (font.getSpacing() - (metrics.fDescent - metrics.fAscent)) / 2);
     canvas->restore();
 }
+
+}; //Namespace pschem

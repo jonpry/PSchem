@@ -6,6 +6,8 @@
 using namespace std;
 using namespace peg;
 
+namespace pschem {
+
 static string readFile(string fname){
     ifstream t(fname);
     stringstream buffer;
@@ -218,3 +220,5 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
 
     }    
 }
+
+}; //Namespace pschem
