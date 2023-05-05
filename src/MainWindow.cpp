@@ -122,7 +122,8 @@ void MainWindow::onPaint(SkSurface* surface) {
     ctx.view_mat.invert(&ctx.inverse_view_mat);
 
     Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
-    drawDrawing(drawing,canvas);    
+    anydict_t empty;
+    drawDrawing(drawing,canvas,empty);    
     canvas->restore();
     this->drawImGui();
 }
@@ -176,7 +177,7 @@ Drawing &MainWindow::getDrawing(string fname){
     return drawings.at(fname);
 }
 
-void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
+void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas, anydict_t &props){
 
     canvas->save();
     
@@ -186,6 +187,7 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
     paint.setStrokeCap(SkPaint::Cap::kRound_Cap);
     paint.setStrokeJoin(SkPaint::Join::kRound_Join);
     paint.setStyle(SkPaint::Style::kStroke_Style);
+    ctx.props = props;
 
 
     for(auto l : drawing.lines){
@@ -209,7 +211,6 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
         b.draw(canvas,paint,ctx);
     }
 
-    paint.setStyle(SkPaint::Style::kStroke_Style);
     for(auto p : drawing.polys){
         paint.setColor(colorMap[p.layer]);
         p.draw(canvas,paint,ctx);
@@ -230,7 +231,7 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas){
         if(c.mirror)
             canvas->scale(-1,1);
 
-        drawDrawing(subDrawing,canvas);
+        drawDrawing(subDrawing,canvas,c.m_props);
         canvas->restore();
     }
 

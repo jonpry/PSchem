@@ -8,13 +8,51 @@
 
 using namespace std;
 
-std::vector<std::string> split(const std::string& target, char c)
+static std::string toString(std::any any){
+    if(any.type() == typeid(std::string))
+        return std::any_cast<string>(any);
+    if(any.type() == typeid(float))
+        return std::to_string(std::any_cast<float>(any));
+    if(any.type() == typeid(int))
+        return std::to_string(std::any_cast<int>(any));
+    return "other";
+}
+
+static std::string replace(std::string &input, anydict_t &props){
+    vector<char> ret, key;
+    for(int i=0; i < input.size(); i++){
+        if(input[i] != '@'){
+            ret.push_back(input[i]);
+            continue;
+        }
+        for(i=i+1; i <= input.size(); i++){
+            if(i == input.size() || input[i] == ' '){
+                string skey = string(key.begin(),key.end());
+                if(props.find(skey) != props.end()){
+                    string v = toString(props[skey]);
+                    ret.insert(ret.end(),v.begin(),v.end());
+                }else{
+                    ret.push_back('@');
+                    ret.insert(ret.end(),key.begin(),key.end());
+                }
+                if(i != input.size() - 1)
+                    ret.push_back(' ');
+                break;
+            }
+            key.push_back(input[i]);
+        }
+    }
+    return string(ret.begin(),ret.end());
+}
+
+static std::vector<std::string> split(const std::string& target, char c, anydict_t &props)
 {
 	std::string temp;
 	std::stringstream stringstream { target };
 	std::vector<std::string> result;
 
 	while (std::getline(stringstream, temp, c)) {
+	    temp = replace(temp, props);
 		result.push_back(temp);
 	}
 
@@ -22,10 +60,10 @@ std::vector<std::string> split(const std::string& target, char c)
 }
 
 
-Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size, std::map<std::string,std::any> _props) : text(_text), x(_x), y(_y), rot(_rot), mirror(_mirror), size(_size), props(_props) {
+Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size, anydict_t props) : Drawable(props), text(_text), x(_x), y(_y), rot(_rot), mirror(_mirror), size(_size) {
     layer = COLOR_TEXT;
     if(props.find("layer") != props.end())
-        layer = (int)std::any_cast<float>(props["layer"]);
+        layer = (int)std::any_cast<int>(props["layer"]);
 }
 
 void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
@@ -38,7 +76,7 @@ void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
     ctx.font.getMetrics(&metrics);
 
 
-    auto texts = split(text,'\n');
+    auto texts = split(text,'\n',ctx.props);
 
     float max_width=0;
     for(int i=0; i < texts.size(); i++){

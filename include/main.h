@@ -12,24 +12,29 @@
 
 enum { COLOR_BG, COLOR_NET, COLOR_SEL, COLOR_TEXT, COLOR_SYM, COLOR_PIN};
 
+typedef std::map<std::string,std::any> anydict_t;
+
 class DrawContext {
  public:
     SkFont font;
     SkMatrix inverse_view_mat, view_mat; 
+    anydict_t props;
 };
 
 
-class IDrawable {
+class Drawable {
  public:
+    Drawable(std::map<std::string,std::any> &_props) : m_props(_props) {}
     virtual void draw(SkCanvas *canvas, SkPaint &paint, DrawContext &ctx) = 0;
+
+    anydict_t m_props;
 };
 
-class Text : IDrawable{
+class Text : public Drawable{
  public:
-    Text(std::string text, float x, float y, int rot, int mirrot, float size, std::map<std::string,std::any> props);
+    Text(std::string text, float x, float y, int rot, int mirrot, float size, anydict_t props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
-    std::map<std::string,std::any> props;
     std::string text;
     float x, y, size;
     int rot, mirror;
@@ -37,9 +42,10 @@ class Text : IDrawable{
  private:
 };
 
-class Component {
+class Component : public Drawable {
  public:
-    Component(std::string symbol, float x, float y, int rot, int mirror);
+    Component(std::string symbol, float x, float y, int rot, int mirror, anydict_t props);
+    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx){}
     
     std::string symbol;
     float x, y;
@@ -47,9 +53,9 @@ class Component {
  private:
 };
 
-class Line : IDrawable {
+class Line : public Drawable {
  public:
-    Line(int layer, float x1, float y1, float x2, float y2);
+    Line(int layer, float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
     int layer;
@@ -57,18 +63,18 @@ class Line : IDrawable {
  private:
 };
 
-class Net : IDrawable{
+class Net : public Drawable{
  public:
-    Net(float x1, float y1, float x2, float y2);
+    Net(float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
     float x1, y1, x2, y2;
  private:
 };
 
-class Box : IDrawable{
+class Box : public Drawable{
  public:
-    Box(int layer, float x1, float y1, float x2, float y2);
+    Box(int layer, float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
     int layer;
@@ -76,9 +82,9 @@ class Box : IDrawable{
  private:
 };
 
-class Arc : IDrawable{
+class Arc : public Drawable{
  public:
-    Arc(int layer, float cx, float cy, float rad, float sa, float ea);
+    Arc(int layer, float cx, float cy, float rad, float sa, float ea, anydict_t props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
     int layer;
@@ -86,11 +92,12 @@ class Arc : IDrawable{
  private:
 };
 
-class Poly : IDrawable{
+class Poly : public Drawable{
  public:
-    Poly(int layer, int npoints);
+    Poly(int layer, int npoints, anydict_t props);
     void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
     
+    bool m_fill {false};
     int layer;
     std::vector<float> xs, ys;
  private:

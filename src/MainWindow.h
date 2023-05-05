@@ -48,7 +48,7 @@ private:
     int mouse_x, mouse_y;
     
     Drawing& getDrawing(string fname);
-    void drawDrawing(Drawing &drawing, SkCanvas *canvas);
+    void drawDrawing(Drawing &drawing, SkCanvas *canvas, anydict_t &props);
     map<string,Drawing> drawings;
 };
 
