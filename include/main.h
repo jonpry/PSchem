@@ -21,13 +21,14 @@ class DrawContext {
     SkFont font;
     SkMatrix inverse_view_mat, view_mat; 
     anydict_t props;
+    SkCanvas *canvas, *hitCanvas;
 };
 
 
 class Drawable {
  public:
     Drawable(std::map<std::string,std::any> &_props) : m_props(_props) {}
-    virtual void draw(SkCanvas *canvas, SkPaint &paint, DrawContext &ctx) = 0;
+    virtual void draw(SkPaint &paint, DrawContext &ctx) = 0;
 
     anydict_t m_props;
 };
@@ -35,7 +36,7 @@ class Drawable {
 class Text : public Drawable{
  public:
     Text(std::string text, float x, float y, int rot, int mirrot, float size, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
+    void draw(SkPaint &paint, DrawContext& ctx);
     
     std::string text;
     float x, y, size;
@@ -47,7 +48,7 @@ class Text : public Drawable{
 class Component : public Drawable {
  public:
     Component(std::string symbol, float x, float y, int rot, int mirror, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx){}
+    void draw(SkPaint &paint, DrawContext& ctx){}
     
     std::string symbol;
     float x, y;
@@ -58,7 +59,7 @@ class Component : public Drawable {
 class Line : public Drawable {
  public:
     Line(int layer, float x1, float y1, float x2, float y2, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
+    void draw(SkPaint &paint, DrawContext& ctx);
     
     int layer;
     float x1, y1, x2, y2;
@@ -68,7 +69,7 @@ class Line : public Drawable {
 class Net : public Drawable{
  public:
     Net(float x1, float y1, float x2, float y2, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
+    void draw(SkPaint &paint, DrawContext& ctx);
     
     float x1, y1, x2, y2;
  private:
@@ -77,7 +78,7 @@ class Net : public Drawable{
 class Box : public Drawable{
  public:
     Box(int layer, float x1, float y1, float x2, float y2, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
+    void draw(SkPaint &paint, DrawContext& ctx);
     
     int layer;
     float x1, y1, x2, y2;
@@ -87,7 +88,7 @@ class Box : public Drawable{
 class Arc : public Drawable{
  public:
     Arc(int layer, float cx, float cy, float rad, float sa, float ea, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
+    void draw(SkPaint &paint, DrawContext& ctx);
     
     int layer;
     float cx, cy, rad, sa, ea;
@@ -97,7 +98,7 @@ class Arc : public Drawable{
 class Poly : public Drawable{
  public:
     Poly(int layer, int npoints, anydict_t props);
-    void draw(SkCanvas *canvas, SkPaint &paint, DrawContext& ctx);
+    void draw(SkPaint &paint, DrawContext& ctx);
     
     bool m_fill {false};
     int layer;

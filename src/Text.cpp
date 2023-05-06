@@ -38,7 +38,7 @@ static std::string replace(std::string &input, anydict_t &props){
                     ret.insert(ret.end(),key.begin(),key.end());
                 }
                 key.clear();
-                if(i != input.size() - 1)
+                if(i != input.size())
                     ret.push_back(' ');
                 break;
             }
@@ -69,8 +69,8 @@ Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size,
         layer = (int)std::any_cast<int>(props["layer"]);
 }
 
-void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
-    canvas->save();
+void Text::draw(SkPaint &paint, DrawContext &ctx){
+    ctx.canvas->save();
     paint.setStrokeWidth(0.25);
     
 
@@ -89,12 +89,12 @@ void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
     float theight = ctx.font.getSpacing() * texts.size();
 
 
-    canvas->translate(x,y);
-    canvas->rotate(rot*90);
+    ctx.canvas->translate(x,y);
+    ctx.canvas->rotate(rot*90);
     if(mirror)
-        canvas->scale(-1,1);
+        ctx.canvas->scale(-1,1);
 
-    SkMatrix cmat = canvas->getLocalToDeviceAs3x3();
+    SkMatrix cmat = ctx.canvas->getLocalToDeviceAs3x3();
     SkMatrix to_world =  ctx.inverse_view_mat * cmat;
    // to_world.dump();   
     SkPoint text_points[4] = {{0,0},{twidth,0},{0,theight},{twidth,theight}};
@@ -103,56 +103,56 @@ void Text::draw(SkCanvas* canvas, SkPaint &paint, DrawContext &ctx){
         SkColor colorSave = paint.getColor();
         SkRect rect = SkRect::MakeLTRB(text_points[0].x(), text_points[0].y(), text_points[3].x(),text_points[3].y());
         paint.setColor(SkColorSetARGB(40,255,255,0));
-        canvas->drawRect(rect,paint);
+        ctx.canvas->drawRect(rect,paint);
     }
     to_world.mapPoints(text_points,text_points,4);
 
-    canvas->save();
-    canvas->setMatrix(ctx.view_mat);
-	canvas->drawLine(text_points[0].x()-2, text_points[0].y(), text_points[0].x()+2, text_points[0].y(), paint);
-	canvas->drawLine(text_points[0].x(), text_points[0].y()-2, text_points[0].x(), text_points[0].y()+2, paint);
+    ctx.canvas->save();
+    ctx.canvas->setMatrix(ctx.view_mat);
+	ctx.canvas->drawLine(text_points[0].x()-2, text_points[0].y(), text_points[0].x()+2, text_points[0].y(), paint);
+	ctx.canvas->drawLine(text_points[0].x(), text_points[0].y()-2, text_points[0].x(), text_points[0].y()+2, paint);
 
     SkColor colorSave = paint.getColor();
     SkRect rect = SkRect::MakeLTRB(text_points[0].x(), text_points[0].y(), text_points[3].x(),text_points[3].y());
     paint.setColor(SkColorSetARGB(40,0,255,0));
-    canvas->drawRect(rect,paint);
+    ctx.canvas->drawRect(rect,paint);
 
     paint.setColor(colorSave);
     bool isVert = abs(text_points[1].y() - text_points[0].y())>EPS;
 
     if(isVert){
         for(int i=0; i < texts.size(); i++){
-            canvas->save();
+            ctx.canvas->save();
             float tpos = (i+1)*ctx.font.getSpacing() - metrics.fDescent + text_points[0].x();
             float theight = text_points[2].x() - text_points[0].x();
             if(theight < 0)
                 tpos += theight;
-            canvas->translate(tpos, text_points[0].y());
-            canvas->rotate(-90);
+            ctx.canvas->translate(tpos, text_points[0].y());
+            ctx.canvas->rotate(-90);
             float twidth = text_points[1].y()-text_points[0].y();
-            canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, ctx.font, paint);
+            ctx.canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, ctx.font, paint);
 
-            canvas->restore();
+            ctx.canvas->restore();
 
         }                
     }else{
         for(int i=0; i < texts.size(); i++){
-            canvas->save();
+            ctx.canvas->save();
             float tpos = (i+1)*ctx.font.getSpacing() - metrics.fDescent + text_points[0].y();
             float theight = text_points[2].y() - text_points[0].y();
             if(theight < 0)
                 tpos += theight;
-            canvas->translate(text_points[0].x(), tpos);
+            ctx.canvas->translate(text_points[0].x(), tpos);
             float twidth = text_points[1].x()-text_points[0].x();
-            canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, ctx.font, paint);
-            canvas->restore();
+            ctx.canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, ctx.font, paint);
+            ctx.canvas->restore();
 
         }        
     }
-    canvas->restore();
+    ctx.canvas->restore();
 
 //        printf("%f %f %f %f %f %f\n", font.getSize(), font.getSpacing(), metrics.fDescent, metrics.fAscent, metrics.fLeading, (font.getSpacing() - (metrics.fDescent - metrics.fAscent)) / 2);
-    canvas->restore();
+    ctx.canvas->restore();
 }
 
 }; //Namespace pschem

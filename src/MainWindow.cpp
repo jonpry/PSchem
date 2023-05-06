@@ -110,7 +110,14 @@ void MainWindow::onBackendCreated() {
 void MainWindow::onPaint(SkSurface* surface) {
     auto canvas = surface->getCanvas();
 
+    if(!hitSurface){
+        SkImageInfo secondaryInfo = SkImageInfo::MakeN32Premul(fWindow->width(),fWindow->height());
+        hitSurface = SkSurface::MakeRenderTarget(fWindow->directContext(), skgpu::Budgeted::kNo, secondaryInfo);
+    }
+    auto hitCanvas  = hitSurface->getCanvas();
+
     // Clear background
+    hitCanvas->clear(SK_ColorBLACK);
     canvas->clear(colorMap[COLOR_BG]);
     canvas->save();
     canvas->setMatrix(ctx.view_mat);
@@ -124,11 +131,17 @@ void MainWindow::onPaint(SkSurface* surface) {
     canvas->drawLine(-5000,0,5000,0,paint);
 
     ctx.view_mat.invert(&ctx.inverse_view_mat);
-
+    ctx.canvas = canvas;
+    ctx.hitCanvas = hitCanvas;
+    
+    hitCanvas->setMatrix(canvas->getTotalMatrix());
     Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
     anydict_t empty;
-    drawDrawing(drawing,canvas,empty);    
+    drawDrawing(drawing,empty);    
+
     canvas->restore();
+//    hitSurface->draw(canvas,0,0,&paint);
+
     this->drawImGui();
 }
 
@@ -181,9 +194,15 @@ Drawing &MainWindow::getDrawing(string fname){
     return drawings.at(fname);
 }
 
-void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas, anydict_t &props){
+void MainWindow::onResize(int width, int height){
+    hitSurface.reset();
+}
 
-    canvas->save();
+
+void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
+
+    ctx.canvas->save();
+    ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
     
     SkPaint paint;
     paint.setColor(SK_ColorGREEN);
@@ -196,50 +215,50 @@ void MainWindow::drawDrawing(Drawing &drawing, SkCanvas *canvas, anydict_t &prop
 
     for(auto l : drawing.lines){
         paint.setColor(colorMap[l.layer]);
-        l.draw(canvas,paint,ctx);
+        l.draw(paint,ctx);
     }
 
     for(auto n : drawing.nets){
         paint.setColor(colorMap[COLOR_NET]);
-        n.draw(canvas,paint,ctx);
+        n.draw(paint,ctx);
     }
 
 	for(auto c : drawing.arcs){
         paint.setColor(colorMap[c.layer]);
-        c.draw(canvas,paint,ctx);
+        c.draw(paint,ctx);
 	}
 
     paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto b : drawing.boxes){
         paint.setColor(colorMap[b.layer]);
-        b.draw(canvas,paint,ctx);
+        b.draw(paint,ctx);
     }
 
     for(auto p : drawing.polys){
         paint.setColor(colorMap[p.layer]);
-        p.draw(canvas,paint,ctx);
+        p.draw(paint,ctx);
     }
 
 
     paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto t : drawing.texts){
         paint.setColor(colorMap[t.layer]);
-        t.draw(canvas,paint,ctx);
+        t.draw(paint,ctx);
     }
 
     for(auto c : drawing.components){
-        canvas->save();
+        ctx.canvas->save();
         Drawing &subDrawing = getDrawing(c.symbol);
-        canvas->translate(c.x,c.y);
-        canvas->rotate(c.rot*90);
+        ctx.canvas->translate(c.x,c.y);
+        ctx.canvas->rotate(c.rot*90);
         if(c.mirror)
-            canvas->scale(-1,1);
+            ctx.canvas->scale(-1,1);
 
-        drawDrawing(subDrawing,canvas,c.m_props);
-        canvas->restore();
+        drawDrawing(subDrawing,c.m_props);
+        ctx.canvas->restore();
     }
 
-	canvas->restore();
+	ctx.canvas->restore();
 }
 
 }; //Namespace pschem
