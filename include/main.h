@@ -12,6 +12,8 @@
 
 namespace pschem {
 
+SkColor mortonColor(uint32_t i);;
+
 enum { COLOR_BG, COLOR_NET, COLOR_SEL, COLOR_TEXT, COLOR_SYM, COLOR_PIN};
 
 typedef std::map<std::string,std::any> anydict_t;
@@ -22,6 +24,8 @@ class DrawContext {
     SkMatrix inverse_view_mat, view_mat; 
     anydict_t props;
     SkCanvas *canvas, *hitCanvas;
+    int objId;
+    std::array<SkColor,22> colorMap;    
 };
 
 

@@ -100,7 +100,6 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
     SkPoint text_points[4] = {{0,0},{twidth,0},{0,theight},{twidth,theight}};
 
     if(false){
-        SkColor colorSave = paint.getColor();
         SkRect rect = SkRect::MakeLTRB(text_points[0].x(), text_points[0].y(), text_points[3].x(),text_points[3].y());
         paint.setColor(SkColorSetARGB(40,255,255,0));
         ctx.canvas->drawRect(rect,paint);
@@ -112,12 +111,10 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
 	ctx.canvas->drawLine(text_points[0].x()-2, text_points[0].y(), text_points[0].x()+2, text_points[0].y(), paint);
 	ctx.canvas->drawLine(text_points[0].x(), text_points[0].y()-2, text_points[0].x(), text_points[0].y()+2, paint);
 
-    SkColor colorSave = paint.getColor();
     SkRect rect = SkRect::MakeLTRB(text_points[0].x(), text_points[0].y(), text_points[3].x(),text_points[3].y());
     paint.setColor(SkColorSetARGB(40,0,255,0));
     ctx.canvas->drawRect(rect,paint);
 
-    paint.setColor(colorSave);
     bool isVert = abs(text_points[1].y() - text_points[0].y())>EPS;
 
     if(isVert){
@@ -130,7 +127,12 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
             ctx.canvas->translate(tpos, text_points[0].y());
             ctx.canvas->rotate(-90);
             float twidth = text_points[1].y()-text_points[0].y();
+
+            ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
+            paint.setColor(ctx.colorMap[layer]);
             ctx.canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, ctx.font, paint);
+            paint.setColor(mortonColor(ctx.objId));
+            ctx.hitCanvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, ctx.font, paint);
 
             ctx.canvas->restore();
 
@@ -144,15 +146,23 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
                 tpos += theight;
             ctx.canvas->translate(text_points[0].x(), tpos);
             float twidth = text_points[1].x()-text_points[0].x();
+
+            ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
+            paint.setColor(ctx.colorMap[layer]);
             ctx.canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, ctx.font, paint);
+            paint.setColor(mortonColor(ctx.objId));
+            ctx.hitCanvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, ctx.font, paint);
+
             ctx.canvas->restore();
 
         }        
     }
+    ctx.objId++;
     ctx.canvas->restore();
 
 //        printf("%f %f %f %f %f %f\n", font.getSize(), font.getSpacing(), metrics.fDescent, metrics.fAscent, metrics.fLeading, (font.getSpacing() - (metrics.fDescent - metrics.fAscent)) / 2);
     ctx.canvas->restore();
+    ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
 }
 
 }; //Namespace pschem

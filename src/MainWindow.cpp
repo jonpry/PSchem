@@ -116,6 +116,8 @@ void MainWindow::onPaint(SkSurface* surface) {
     }
     auto hitCanvas  = hitSurface->getCanvas();
 
+    bool viewHit=true;
+
     // Clear background
     hitCanvas->clear(SK_ColorBLACK);
     canvas->clear(colorMap[COLOR_BG]);
@@ -133,14 +135,17 @@ void MainWindow::onPaint(SkSurface* surface) {
     ctx.view_mat.invert(&ctx.inverse_view_mat);
     ctx.canvas = canvas;
     ctx.hitCanvas = hitCanvas;
-    
+    ctx.colorMap = colorMap;
+    ctx.objId = 0;
+        
     hitCanvas->setMatrix(canvas->getTotalMatrix());
     Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
     anydict_t empty;
     drawDrawing(drawing,empty);    
 
     canvas->restore();
-//    hitSurface->draw(canvas,0,0,&paint);
+    if(viewHit)
+       hitSurface->draw(canvas,0,0,&paint);
 
     this->drawImGui();
 }
@@ -214,35 +219,28 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
 
 
     for(auto l : drawing.lines){
-        paint.setColor(colorMap[l.layer]);
         l.draw(paint,ctx);
     }
 
     for(auto n : drawing.nets){
-        paint.setColor(colorMap[COLOR_NET]);
         n.draw(paint,ctx);
     }
 
 	for(auto c : drawing.arcs){
-        paint.setColor(colorMap[c.layer]);
         c.draw(paint,ctx);
 	}
 
     paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto b : drawing.boxes){
-        paint.setColor(colorMap[b.layer]);
         b.draw(paint,ctx);
     }
 
     for(auto p : drawing.polys){
-        paint.setColor(colorMap[p.layer]);
         p.draw(paint,ctx);
     }
 
-
     paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto t : drawing.texts){
-        paint.setColor(colorMap[t.layer]);
         t.draw(paint,ctx);
     }
 
