@@ -112,7 +112,8 @@ void MainWindow::onPaint(SkSurface* surface) {
 
     if(!hitSurface){
         SkImageInfo secondaryInfo = SkImageInfo::MakeN32Premul(fWindow->width(),fWindow->height());
-        hitSurface = SkSurface::MakeRenderTarget(fWindow->directContext(), skgpu::Budgeted::kNo, secondaryInfo);
+        SkSurfaceProps props;
+        hitSurface = SkSurface::MakeRenderTarget(fWindow->directContext(), skgpu::Budgeted::kNo, secondaryInfo, 1, &props);
     }
     auto hitCanvas  = hitSurface->getCanvas();
 
@@ -161,6 +162,14 @@ void MainWindow::drawImGui() {
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {
     mouse_x = x;
     mouse_y = y;
+    
+    if (skui::InputState::kDown == state) {
+        uint32_t buf[121];
+        SkImageInfo dstInfo = SkImageInfo::MakeN32Premul(11,11);
+        hitSurface->readPixels(dstInfo,buf,11*sizeof(uint32_t),x-5,y-5);
+        printf("%X\n", mortonId(buf[5*11+5]));
+    }
+    
     return true;
 }
 

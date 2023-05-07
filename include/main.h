@@ -12,7 +12,8 @@
 
 namespace pschem {
 
-SkColor mortonColor(uint32_t i);;
+SkColor mortonColor(uint32_t i);
+uint32_t mortonId(uint32_t argb);
 
 enum { COLOR_BG, COLOR_NET, COLOR_SEL, COLOR_TEXT, COLOR_SYM, COLOR_PIN};
 
