@@ -23,7 +23,7 @@ void Poly::draw(SkPaint &paint, DrawContext &ctx){
         path.lineTo(xs[i],ys[i]);
     }
     
-    paint.setColor(ctx.colorMap[layer]);
+    paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
     paint.setStyle(m_fill?SkPaint::Style::kFill_Style:SkPaint::Style::kStroke_Style);
 
     ctx.canvas->drawPath(path,paint);

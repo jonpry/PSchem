@@ -117,6 +117,9 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
 
     bool isVert = abs(text_points[1].y() - text_points[0].y())>EPS;
 
+    ctx.font.setSubpixel(false);
+    ctx.font.setEdging(SkFont::Edging::kAlias);
+    
     if(isVert){
         for(int i=0; i < texts.size(); i++){
             ctx.canvas->save();
@@ -129,8 +132,17 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
             float twidth = text_points[1].y()-text_points[0].y();
 
             ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
-            paint.setColor(ctx.colorMap[layer]);
+            paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
+
+            ctx.font.setSubpixel(true);
+            ctx.font.setEdging(SkFont::Edging::kAntiAlias);
+
             ctx.canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, ctx.font, paint);
+
+
+            ctx.font.setSubpixel(false);
+            ctx.font.setEdging(SkFont::Edging::kAlias);
+
             paint.setColor(mortonColor(ctx.objId));
             ctx.hitCanvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth>0?-twidth:0, 0, ctx.font, paint);
 
@@ -148,8 +160,16 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
             float twidth = text_points[1].x()-text_points[0].x();
 
             ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
-            paint.setColor(ctx.colorMap[layer]);
+            paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
+
+            ctx.font.setSubpixel(true);
+            ctx.font.setEdging(SkFont::Edging::kAntiAlias);
+
             ctx.canvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, ctx.font, paint);
+
+            ctx.font.setSubpixel(false);
+            ctx.font.setEdging(SkFont::Edging::kAlias);
+
             paint.setColor(mortonColor(ctx.objId));
             ctx.hitCanvas->drawSimpleText(texts[i].c_str(), texts[i].size(), SkTextEncoding::kUTF8, twidth<0?twidth:0, 0, ctx.font, paint);
 

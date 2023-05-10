@@ -113,11 +113,11 @@ void MainWindow::onPaint(SkSurface* surface) {
     if(!hitSurface){
         SkImageInfo secondaryInfo = SkImageInfo::MakeN32Premul(fWindow->width(),fWindow->height());
         SkSurfaceProps props;
-        hitSurface = SkSurface::MakeRenderTarget(fWindow->directContext(), skgpu::Budgeted::kNo, secondaryInfo, 1, &props);
+        hitSurface = SkSurface::MakeRenderTarget(fWindow->directContext(), skgpu::Budgeted::kNo, secondaryInfo, 0, &props);
     }
     auto hitCanvas  = hitSurface->getCanvas();
 
-    bool viewHit=true;
+    bool viewHit=false;
 
     // Clear background
     hitCanvas->clear(SK_ColorBLACK);
@@ -167,7 +167,8 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         uint32_t buf[121];
         SkImageInfo dstInfo = SkImageInfo::MakeN32Premul(11,11);
         hitSurface->readPixels(dstInfo,buf,11*sizeof(uint32_t),x-5,y-5);
-        printf("%X\n", mortonId(buf[5*11+5]));
+        ctx.selectedId = mortonId(buf[5*11+5]);
+        printf("Selected: %d\n", ctx.selectedId);
     }
     
     return true;

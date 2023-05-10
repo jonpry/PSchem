@@ -21,11 +21,11 @@ typedef std::map<std::string,std::any> anydict_t;
 
 class DrawContext {
  public:
-    SkFont font;
+    SkFont font, hitFont;
     SkMatrix inverse_view_mat, view_mat; 
     anydict_t props;
     SkCanvas *canvas, *hitCanvas;
-    int objId;
+    int objId, selectedId;
     std::array<SkColor,22> colorMap;    
 };
 

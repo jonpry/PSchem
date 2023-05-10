@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include <limits.h>
+#include <cassert>
+#include <stdio.h>
 #include "include/core/SkColor.h"
 
 namespace pschem {
@@ -45,17 +47,20 @@ static uint64_t morton_encode(unsigned int x, unsigned int y, unsigned int z){
     return answer;
 }
 
+uint32_t mortonId(uint32_t abgr){
+    uint32_t id = morton_encode((abgr >> 0) & 0xFF, (abgr >> 8) & 0xFF, (abgr >> 16) & 0xFF) << 8;
+    return (reverseBits(id))-1;
+}
+
 SkColor mortonColor(uint32_t i){
+    uint32_t orig=i;
     i+=1;
     i = reverseBits(i) >> 8;
     uint32_t x=0,y=0,z=0;
     morton_decode3d(i,&x,&y,&z);
-    return SkColorSetARGB(255,x,y,z);
+    SkColor ret = SkColorSetARGB(255,x,y,z);
+    return ret;
 }
 
-uint32_t mortonId(uint32_t argb){
-    uint32_t id = morton_encode((argb >> 16) & 0xFF, (argb >> 8) & 0xFF, argb & 0xFF) << 8;
-    return reverseBits(id)-1;
-}
 
 }; //Namespace pschem
