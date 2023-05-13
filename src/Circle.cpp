@@ -12,10 +12,12 @@ Arc::Arc(int _layer, float _cx, float _cy, float _rad, float _sa, float _ea, any
 void Arc::draw(SkPaint &paint, DrawContext &ctx){
     SkRect rect = SkRect::MakeXYWH(cx - rad, cy - rad, rad*2, rad*2);
 
-    paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
+    paint.setColor(isSelected(ctx)?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
 	ctx.canvas->drawArc(rect, sa, ea, false, paint);
 
-    paint.setColor(mortonColor(ctx.objId++));
+    paint.setColor(mortonColor(ctx.objId));
+    ctx.window->SetId(ctx.objId++,ctx.parent?ctx.parent:this);
+
 	ctx.hitCanvas->drawArc(rect, sa, ea, false, paint);
 
 }

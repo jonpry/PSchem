@@ -19,14 +19,25 @@ enum { COLOR_BG, COLOR_NET, COLOR_SEL, COLOR_TEXT, COLOR_SYM, COLOR_PIN};
 
 typedef std::map<std::string,std::any> anydict_t;
 
+class Drawable;
+class MainWindow;
+
+class IIdReceiver {
+ public:
+    virtual void SetId(int id, Drawable* tgt)=0;
+};
+
 class DrawContext {
  public:
     SkFont font, hitFont;
     SkMatrix inverse_view_mat, view_mat; 
     anydict_t props;
     SkCanvas *canvas, *hitCanvas;
-    int objId, selectedId;
+    int objId;
     std::array<SkColor,22> colorMap;    
+    Drawable *parent, *selected;
+    IIdReceiver *window;
+    
 };
 
 
@@ -35,6 +46,7 @@ class Drawable {
     Drawable(std::map<std::string,std::any> &_props) : m_props(_props) {}
     virtual void draw(SkPaint &paint, DrawContext &ctx) = 0;
 
+    bool isSelected(DrawContext &ctx){ return ctx.selected == this || (ctx.parent && ctx.selected == ctx.parent);}
     anydict_t m_props;
 };
 

@@ -133,11 +133,13 @@ void MainWindow::onPaint(SkSurface* surface) {
     canvas->drawLine(0,-5000,0,5000,paint);
     canvas->drawLine(-5000,0,5000,0,paint);
 
-    ctx.view_mat.invert(&ctx.inverse_view_mat);
+    bool invertable = ctx.view_mat.invert(&ctx.inverse_view_mat);
     ctx.canvas = canvas;
     ctx.hitCanvas = hitCanvas;
     ctx.colorMap = colorMap;
     ctx.objId = 0;
+    ctx.parent = 0;
+    ctx.window = this;
         
     hitCanvas->setMatrix(canvas->getTotalMatrix());
     Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
@@ -167,11 +169,59 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         uint32_t buf[121];
         SkImageInfo dstInfo = SkImageInfo::MakeN32Premul(11,11);
         hitSurface->readPixels(dstInfo,buf,11*sizeof(uint32_t),x-5,y-5);
-        ctx.selectedId = mortonId(buf[5*11+5]);
-        printf("Selected: %d\n", ctx.selectedId);
+        int selectedId=-1;
+        for(int i=0; i <= 5; i++){
+            printf("I: %d\n", i);
+            for(int j=0; j < i*2+1; j++) {
+                selectedId = mortonId(buf[(5-i)*11+5-i+j]);
+                if(selectedId>=0)
+                    break;
+            }
+
+            if(selectedId>=0)
+                break;
+
+            for(int j=0; j < i*2+1; j++) {
+                selectedId = mortonId(buf[(5-i+j)*11+5+i]);
+                if(selectedId>=0)
+                    break;
+            }
+
+            if(selectedId>=0)
+                break;
+            
+            for(int j=0; j < i*2+1; j++) {
+                selectedId = mortonId(buf[(5+i)*11+5-i+j]);
+                if(selectedId>=0)
+                    break;
+            }
+
+            if(selectedId>=0)
+                break;
+            
+            for(int j=0; j < i*2+1; j++) {
+                selectedId = mortonId(buf[(5-i+j)*11+5-i]);
+                if(selectedId>=0)
+                    break;
+
+            }            
+
+            if(selectedId>=0)
+                break;
+
+        }
+        ctx.selected = selectedId>=0?byId[selectedId]:0;
+        printf("Selected: %d %p\n", selectedId, ctx.selected);
     }
     
     return true;
+}
+
+void MainWindow::SetId(int id, Drawable* tgt){
+    if(byId.size() <= id)
+        byId.resize(id+1);
+    printf("Set: %d %p\n", id, tgt);
+    byId[id] = tgt;
 }
 
 bool MainWindow::onMouseWheel(float delta, skui::ModifierKey modifiers) {
@@ -228,35 +278,41 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
     ctx.props = props;
 
 
-    for(auto l : drawing.lines){
+    for(auto &l : drawing.lines){
         l.draw(paint,ctx);
     }
 
-    for(auto n : drawing.nets){
+    for(auto &n : drawing.nets){
         n.draw(paint,ctx);
     }
 
-	for(auto c : drawing.arcs){
+	for(auto &c : drawing.arcs){
         c.draw(paint,ctx);
 	}
 
     paint.setStyle(SkPaint::Style::kFill_Style);
-    for(auto b : drawing.boxes){
+    for(auto &b : drawing.boxes){
         b.draw(paint,ctx);
     }
 
-    for(auto p : drawing.polys){
+    for(auto &p : drawing.polys){
         p.draw(paint,ctx);
     }
 
     paint.setStyle(SkPaint::Style::kFill_Style);
-    for(auto t : drawing.texts){
+    for(auto &t : drawing.texts){
         t.draw(paint,ctx);
+        printf("T: %p\n", &t);
     }
 
-    for(auto c : drawing.components){
+    bool setParent = !ctx.parent;
+    for(auto &c : drawing.components){
         ctx.canvas->save();
         Drawing &subDrawing = getDrawing(c.symbol);
+        if(setParent)
+            ctx.parent = &c;
+        else
+            ctx.parent = 0;
         ctx.canvas->translate(c.x,c.y);
         ctx.canvas->rotate(c.rot*90);
         if(c.mirror)

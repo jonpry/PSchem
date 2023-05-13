@@ -132,7 +132,7 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
             float twidth = text_points[1].y()-text_points[0].y();
 
             ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
-            paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
+            paint.setColor(isSelected(ctx)?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
 
             ctx.font.setSubpixel(true);
             ctx.font.setEdging(SkFont::Edging::kAntiAlias);
@@ -160,7 +160,7 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
             float twidth = text_points[1].x()-text_points[0].x();
 
             ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
-            paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
+            paint.setColor(isSelected(ctx)?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
 
             ctx.font.setSubpixel(true);
             ctx.font.setEdging(SkFont::Edging::kAntiAlias);
@@ -177,7 +177,7 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
 
         }        
     }
-    ctx.objId++;
+    ctx.window->SetId(ctx.objId++,ctx.parent?ctx.parent:this);
     ctx.canvas->restore();
 
 //        printf("%f %f %f %f %f %f\n", font.getSize(), font.getSpacing(), metrics.fDescent, metrics.fAscent, metrics.fLeading, (font.getSpacing() - (metrics.fDescent - metrics.fAscent)) / 2);

@@ -13,9 +13,10 @@ Box::Box(int _layer, float _x1, float _y1, float _x2, float _y2, anydict_t props
 void Box::draw(SkPaint &paint, DrawContext &ctx){
     SkRect rect = SkRect::MakeLTRB(x1,y1,x2,y2);
     SkRRect rrect = SkRRect::MakeRectXY(rect,0.5,0.5);
-    paint.setColor(ctx.objId == ctx.selectedId?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
+    paint.setColor(isSelected(ctx)?ctx.colorMap[COLOR_SEL]:ctx.colorMap[layer]);
     ctx.canvas->drawRRect(rrect,paint);
-    paint.setColor(mortonColor(ctx.objId++));
+    paint.setColor(mortonColor(ctx.objId));
+    ctx.window->SetId(ctx.objId++,ctx.parent?ctx.parent:this);
     ctx.hitCanvas->drawRRect(rrect,paint);
 
 }
