@@ -185,4 +185,7 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
     ctx.hitCanvas->setMatrix(ctx.canvas->getTotalMatrix());
 }
 
+void Text::rotate(){
+    rot = (rot+1)%4;
+}
 }; //Namespace pschem

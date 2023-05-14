@@ -47,6 +47,7 @@ class Drawable {
     virtual void draw(SkPaint &paint, DrawContext &ctx) = 0;
 
     bool isSelected(DrawContext &ctx){ return ctx.selected == this || (ctx.parent && ctx.selected == ctx.parent);}
+    virtual void rotate() {}
     anydict_t m_props;
 };
 
@@ -54,6 +55,8 @@ class Text : public Drawable{
  public:
     Text(std::string text, float x, float y, int rot, int mirrot, float size, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
+    
+    void rotate();
     
     std::string text;
     float x, y, size;
@@ -66,6 +69,8 @@ class Component : public Drawable {
  public:
     Component(std::string symbol, float x, float y, int rot, int mirror, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx){}
+
+    void rotate();
     
     std::string symbol;
     float x, y;

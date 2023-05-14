@@ -242,13 +242,20 @@ bool MainWindow::onKey(skui::Key key, skui::InputState state, skui::ModifierKey 
         case skui::Key::kLeft: ctx.view_mat.postTranslate(-t,0.0); break;
         case skui::Key::kRight: ctx.view_mat.postTranslate(t,0.0); break;
         case skui::Key::kUp: ctx.view_mat.postTranslate(0.0,-t); break;
-        case skui::Key::kDown: ctx.view_mat.postTranslate(0.0,t); break;
+        case skui::Key::kDown: ctx.view_mat.postTranslate(0.0,t); break;        
         default: break;
     }
     fWindow->inval();
     return true;
 }
 
+bool MainWindow::onChar(SkUnichar c, skui::ModifierKey modifiers) {
+    switch(c){
+        case 'r': if(ctx.selected != 0 && (modifiers == skui::ModifierKey::kOption)) ctx.selected->rotate(); break; 
+    }
+    fWindow->inval();    
+    return true;
+}
 
 Drawing &MainWindow::getDrawing(string fname){
     if(drawings.find(fname) != drawings.end())
