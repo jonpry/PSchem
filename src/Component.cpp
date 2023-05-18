@@ -13,4 +13,13 @@ void Component::rotate(){
     rot = (rot+1)%4;
 }
 
+void Component::flip(){
+    mirror = !mirror;
+}
+
+void Component::move(float dx, float dy) {
+    x += dx;
+    y += dy;
+}
+
 }; //Namespace pschem

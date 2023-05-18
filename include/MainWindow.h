@@ -20,7 +20,7 @@ class SkSurface;
 
 namespace pschem {
 
-class MainWindow : public sk_app::Application, sk_app::Window::Layer {
+class MainWindow : public sk_app::Application, sk_app::Window::Layer, IIdReceiver {
 public:
     MainWindow(int argc, char** argv, void* platformData);
     ~MainWindow() override;
@@ -29,9 +29,13 @@ public:
 
     void onBackendCreated() override;
     void onPaint(SkSurface*) override;
-    bool onMouseWheel(float delta, skui::ModifierKey modifiers) override;
+    void onResize(int width, int height) override;
+    bool onMouseWheel(float delta, skui::ModifierKey modifiers) override; 
     bool onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) override;
     bool onKey(skui::Key key, skui::InputState state, skui::ModifierKey modifiers) override;
+    bool onChar(SkUnichar c, skui::ModifierKey modifiers) override;
+
+    void SetId(int id, Drawable* tgt) override;
 
 private:
     void updateTitle();
@@ -41,7 +45,7 @@ private:
     sk_app::Window::BackendType fBackendType;
 
     SkScalar fRotationAngle;
-    SkColor colorMap[22];
+    std::array<SkColor,22> colorMap;
     
     void drawImGui();
 
@@ -50,8 +54,11 @@ private:
     int mouse_x, mouse_y;
     
     Drawing& getDrawing(string fname);
-    void drawDrawing(Drawing &drawing, SkCanvas *canvas, anydict_t &props);
+    void drawDrawing(Drawing &drawing, anydict_t &props);
     map<string,Drawing> drawings;
+    vector<Drawable*> byId;
+    
+    sk_sp<SkSurface>           hitSurface;
 };
 
 }; //Namespace pschem

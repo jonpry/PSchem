@@ -104,7 +104,7 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
         paint.setColor(SkColorSetARGB(40,255,255,0));
         ctx.canvas->drawRect(rect,paint);
     }
-    to_world.mapPoints(text_points,text_points,4);
+    to_world.mapPoints(text_points,4);
 
     ctx.canvas->save();
     ctx.canvas->setMatrix(ctx.view_mat);
@@ -188,4 +188,9 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
 void Text::rotate(){
     rot = (rot+1)%4;
 }
+
+void Text::flip(){
+    mirror = !mirror;
+}
+
 }; //Namespace pschem

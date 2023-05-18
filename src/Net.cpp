@@ -18,4 +18,10 @@ void Net::draw(SkPaint &paint, DrawContext &ctx){
 	ctx.hitCanvas->drawLine(x1, y1, x2, y2, paint);
 }
 
+void Net::move(float dx, float dy){
+    x1 += dx; x2 += dx;
+    y1 += dy; y2 += dy;
+}
+
+
 }; //Namespace pschem

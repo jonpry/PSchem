@@ -37,7 +37,7 @@ namespace pschem {
 
 MainWindow::MainWindow(int argc, char** argv, void* platformData)
         : fBackendType(Window::kNativeGL_BackendType),
-        fRotationAngle(0) {
+        fRotationAngle(0), moving(false) {
   
   
     SkGraphics::Init();
@@ -166,6 +166,11 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
     mouse_y = y;
     
     if (skui::InputState::kDown == state) {
+        if(moving){
+            moving=false;
+            return true;
+        }
+    
         uint32_t buf[121];
         SkImageInfo dstInfo = SkImageInfo::MakeN32Premul(11,11);
         hitSurface->readPixels(dstInfo,buf,11*sizeof(uint32_t),x-5,y-5);
@@ -212,6 +217,19 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         }
         ctx.selected = selectedId>=0?byId[selectedId]:0;
         printf("Selected: %d %p\n", selectedId, ctx.selected);
+
+        fWindow->inval();    
+    }
+    
+    if(moving) {
+        SkPoint mouse_points[2] = {{begin_x,begin_y},{mouse_x,mouse_y}};
+        ctx.inverse_view_mat.mapPoints(mouse_points,2);
+        printf("%f %f\n", mouse_points[1].x() - mouse_points[0].x(), mouse_points[1].y() - mouse_points[0].y());
+    
+        ctx.selected->move(mouse_points[1].x() - mouse_points[0].x(), mouse_points[1].y() - mouse_points[0].y());
+        begin_x = mouse_x;
+        begin_y = mouse_y;
+        fWindow->inval();     
     }
     
     return true;
@@ -220,7 +238,6 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
 void MainWindow::SetId(int id, Drawable* tgt){
     if(byId.size() <= id)
         byId.resize(id+1);
-    printf("Set: %d %p\n", id, tgt);
     byId[id] = tgt;
 }
 
@@ -241,8 +258,8 @@ bool MainWindow::onKey(skui::Key key, skui::InputState state, skui::ModifierKey 
     switch(key){
         case skui::Key::kLeft: ctx.view_mat.postTranslate(-t,0.0); break;
         case skui::Key::kRight: ctx.view_mat.postTranslate(t,0.0); break;
-        case skui::Key::kUp: ctx.view_mat.postTranslate(0.0,-t); break;
-        case skui::Key::kDown: ctx.view_mat.postTranslate(0.0,t); break;        
+        case skui::Key::kUp: ctx.view_mat.postTranslate(0.0,t); break;
+        case skui::Key::kDown: ctx.view_mat.postTranslate(0.0,-t); break;        
         default: break;
     }
     fWindow->inval();
@@ -251,7 +268,10 @@ bool MainWindow::onKey(skui::Key key, skui::InputState state, skui::ModifierKey 
 
 bool MainWindow::onChar(SkUnichar c, skui::ModifierKey modifiers) {
     switch(c){
+        case 'f': if(ctx.selected != 0 && (modifiers == skui::ModifierKey::kOption)) ctx.selected->flip(); break; 
         case 'r': if(ctx.selected != 0 && (modifiers == skui::ModifierKey::kOption)) ctx.selected->rotate(); break; 
+        case 'm': if(ctx.selected != 0 && (modifiers == skui::ModifierKey::kNone)) beginDrag(); break; 
+
     }
     fWindow->inval();    
     return true;
@@ -270,6 +290,11 @@ void MainWindow::onResize(int width, int height){
     hitSurface.reset();
 }
 
+void MainWindow::beginDrag(){
+    moving=true;
+    begin_x = mouse_x;
+    begin_y = mouse_y;
+}
 
 void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
 
@@ -309,7 +334,6 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
     paint.setStyle(SkPaint::Style::kFill_Style);
     for(auto &t : drawing.texts){
         t.draw(paint,ctx);
-        printf("T: %p\n", &t);
     }
 
     bool setParent = !ctx.parent;

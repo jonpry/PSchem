@@ -115,7 +115,8 @@ bool ImGuiLayer::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
     }
 
     //TODO: maybe a lot
-    fWindow->inval();
+    if(io.WantCaptureMouse)
+        fWindow->inval();
         
     return io.WantCaptureMouse;
 }
