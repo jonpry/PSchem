@@ -160,6 +160,40 @@ class Drawing {
     std::vector<Net> nets;
     std::vector<Poly> polys;
     std::vector<Component> components;
+    
+    void DeriveConnectivity();
+};
+
+class Sweep {
+ public:
+    class Query: public Point {
+     public:
+        Query(Point pt, Drawable *src) : Point(pt), m_src(src) {}
+     
+        Drawable *owner;
+
+        std::vector<Net*> m_hits;
+        Drawable *m_src;
+    };
+
+    class SortedLine {
+     public:
+        SortedLine(Point p1, Point p2, Net *src);
+        
+        float distanceTo(Point pi);
+        Net *m_src;
+        
+        Point m_p1, m_p2;
+    };
+    
+    Sweep();
+   
+    void SetLines(std::vector<Net> &lines);
+    void QueryPt(Point p);
+    void QueryMany(std::vector<Query> &p);
+   
+    std::vector<SortedLine> m_lines;
+    std::vector<SortedLine*> m_starts,m_ends;
 };
 
 }; //Namespace pschem
