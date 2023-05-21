@@ -344,7 +344,7 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
             ctx.parent = &c;
         else
             ctx.parent = 0;
-        ctx.canvas->translate(c.x,c.y);
+        ctx.canvas->translate(c.pt.m_x,c.pt.m_y);
         ctx.canvas->rotate(c.rot*90);
         if(c.mirror)
             ctx.canvas->scale(-1,1);

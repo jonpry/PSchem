@@ -8,6 +8,8 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkFont.h"
 
+#include <Eigen/Core>
+
 #define EPS 1e-6
 
 namespace pschem {
@@ -21,6 +23,16 @@ typedef std::map<std::string,std::any> anydict_t;
 
 class Drawable;
 class MainWindow;
+
+class Point {
+ public:
+    Point() {}
+    Point(float x, float y) { m_x=x; m_y = y; }
+    
+    float m_x, m_y;
+    
+    Eigen::Vector2f Vec() { return Eigen::Vector2f(m_x,m_y); }
+};
 
 class IIdReceiver {
  public:
@@ -62,7 +74,8 @@ class Text : public Drawable{
     void flip();
     
     std::string text;
-    float x, y, size;
+    float size;
+    Point pt;
     int rot, mirror;
     int layer;
  private:
@@ -78,7 +91,7 @@ class Component : public Drawable {
     void move(float dx, float dy);
     
     std::string symbol;
-    float x, y;
+    Point pt;
     int rot, mirror;
  private:
 };
@@ -89,7 +102,7 @@ class Line : public Drawable {
     void draw(SkPaint &paint, DrawContext& ctx);
     
     int layer;
-    float x1, y1, x2, y2;
+    Point p1, p2;
  private:
 };
 
@@ -97,8 +110,8 @@ class Net : public Drawable{
  public:
     Net(float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
-    
-    float x1, y1, x2, y2;
+
+    Point p1, p2;
     void move(float dx, float dy);
 
  private:
@@ -110,7 +123,7 @@ class Box : public Drawable{
     void draw(SkPaint &paint, DrawContext& ctx);
     
     int layer;
-    float x1, y1, x2, y2;
+    Point p1,p2;
  private:
 };
 
@@ -120,7 +133,8 @@ class Arc : public Drawable{
     void draw(SkPaint &paint, DrawContext& ctx);
     
     int layer;
-    float cx, cy, rad, sa, ea;
+    Point c;
+    float rad, sa, ea;
  private:
 };
 
@@ -131,7 +145,7 @@ class Poly : public Drawable{
     
     bool m_fill {false};
     int layer;
-    std::vector<float> xs, ys;
+    std::vector<Point> pts;
  private:
 };
 

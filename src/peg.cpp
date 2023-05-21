@@ -211,9 +211,9 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
 
         if(statement.id == "P "){
             Poly p(any_cast<int>(statement.fields[0]), any_cast<int>(statement.fields[1]), any_cast<map<string,any>>(statement.fields[statement.fields.size()-1]));
-            for(int i=0; i < p.xs.size(); i++){
-                  p.xs[i] = getFloat(statement.fields[2+i*2]);
-                  p.ys[i] = getFloat(statement.fields[2+i*2+1]);
+            for(int i=0; i < p.pts.size(); i++){
+                  p.pts[i].m_x = getFloat(statement.fields[2+i*2]);
+                  p.pts[i].m_y = getFloat(statement.fields[2+i*2+1]);
             }
             polys.push_back(p);
         }

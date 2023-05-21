@@ -37,6 +37,7 @@ public:
 
     void SetId(int id, Drawable* tgt) override;
 
+    void beginDrag();
 private:
     void updateTitle();
 
@@ -51,7 +52,8 @@ private:
 
     sk_sp<SkTypeface> typeface;
     DrawContext ctx;
-    int mouse_x, mouse_y;
+    int mouse_x, mouse_y, begin_x, begin_y;
+    bool moving;
     
     Drawing& getDrawing(string fname);
     void drawDrawing(Drawing &drawing, anydict_t &props);

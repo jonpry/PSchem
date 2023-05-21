@@ -63,7 +63,7 @@ static std::vector<std::string> split(const std::string& target, char c, anydict
 }
 
 
-Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size, anydict_t props) : Drawable(props), text(_text), x(_x), y(_y), rot(_rot), mirror(_mirror), size(_size) {
+Text::Text(string _text, float _x, float _y, int _rot, int _mirror, float _size, anydict_t props) : Drawable(props), text(_text), pt(_x,_y), rot(_rot), mirror(_mirror), size(_size) {
     layer = COLOR_TEXT;
     if(props.find("layer") != props.end())
         layer = (int)std::any_cast<int>(props["layer"]);
@@ -89,7 +89,7 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
     float theight = ctx.font.getSpacing() * texts.size();
 
 
-    ctx.canvas->translate(x,y);
+    ctx.canvas->translate(pt.m_x,pt.m_y);
     ctx.canvas->rotate(rot*90);
     if(mirror)
         ctx.canvas->scale(-1,1);
