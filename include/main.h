@@ -161,7 +161,7 @@ class Drawing {
     std::vector<Poly> polys;
     std::vector<Component> components;
     
-    void DeriveConnectivity();
+    void DeriveConnectivity(SkPaint &paint, DrawContext &ctx);
 };
 
 class Sweep {

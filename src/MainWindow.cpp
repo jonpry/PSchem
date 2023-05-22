@@ -309,7 +309,12 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
     paint.setStyle(SkPaint::Style::kStroke_Style);
     ctx.props = props;
 
-    drawing.DeriveConnectivity();
+    paint.setStyle(SkPaint::Style::kFill_Style);
+
+    if(!ctx.parent)
+        drawing.DeriveConnectivity(paint,ctx);
+
+    paint.setStyle(SkPaint::Style::kStroke_Style);
     
     for(auto &l : drawing.lines){
         l.draw(paint,ctx);
