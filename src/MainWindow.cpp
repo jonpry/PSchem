@@ -25,6 +25,7 @@
 #include "tools/flags/CommonFlags.h"
 
 #include <sstream>
+#include <deque>
 #include <string.h>
 
 using namespace sk_app;
@@ -37,7 +38,7 @@ namespace pschem {
 
 MainWindow::MainWindow(int argc, char** argv, void* platformData)
         : fBackendType(Window::kNativeGL_BackendType),
-        fRotationAngle(0), moving(false) {
+        fRotationAngle(0), moving(false), multiSelecting(false) {
   
   
     SkGraphics::Init();
@@ -123,15 +124,22 @@ void MainWindow::onPaint(SkSurface* surface) {
     hitCanvas->clear(SK_ColorBLACK);
     canvas->clear(colorMap[COLOR_BG]);
     canvas->save();
-    canvas->setMatrix(ctx.view_mat);
 
     SkPaint paint;
     paint.setColor(colorMap[COLOR_SEL]);
     paint.setStrokeWidth(1);
     paint.setStyle(SkPaint::Style::kStroke_Style);
 
+    if(multiSelecting){
+        SkRect rect = SkRect::MakeLTRB(begin_x,begin_y,mouse_x,mouse_y);
+        canvas->drawRect(rect,paint);
+    }
+
+    canvas->setMatrix(ctx.view_mat);
+
     canvas->drawLine(0,-5000,0,5000,paint);
     canvas->drawLine(-5000,0,5000,0,paint);
+
 
     bool invertable = ctx.view_mat.invert(&ctx.inverse_view_mat);
     ctx.canvas = canvas;
@@ -164,13 +172,25 @@ void MainWindow::drawImGui() {
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {
     mouse_x = x;
     mouse_y = y;
+
+    if(modifiers == skui::ModifierKey::kButton1 && previousModifiers == skui::ModifierKey::kNone){
+      begin_x = x;
+      begin_y = y;
+      multiSelecting = true;
+    }
     
+    if(multiSelecting){
+        fWindow->inval();    
+        return true;
+    }
+    
+    previousModifiers = modifiers;    
     if (skui::InputState::kDown == state) {
         if(moving){
             moving=false;
             return true;
         }
-    
+                    
         uint32_t buf[121];
         SkImageInfo dstInfo = SkImageInfo::MakeN32Premul(11,11);
         hitSurface->readPixels(dstInfo,buf,11*sizeof(uint32_t),x-5,y-5);

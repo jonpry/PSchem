@@ -54,6 +54,7 @@ private:
     DrawContext ctx;
     int mouse_x, mouse_y, begin_x, begin_y;
     bool moving;
+    bool multiSelecting;
     
     Drawing& getDrawing(string fname);
     void drawDrawing(Drawing &drawing, anydict_t &props);
@@ -61,6 +62,7 @@ private:
     vector<Drawable*> byId;
     
     sk_sp<SkSurface>           hitSurface;
+    skui::ModifierKey          previousModifiers;
 };
 
 }; //Namespace pschem
