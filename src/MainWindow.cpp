@@ -127,15 +127,10 @@ void MainWindow::onPaint(SkSurface* surface) {
 
     SkPaint paint;
     paint.setColor(colorMap[COLOR_SEL]);
-    paint.setStrokeWidth(1);
     paint.setStyle(SkPaint::Style::kStroke_Style);
 
-    if(multiSelecting){
-        SkRect rect = SkRect::MakeLTRB(begin_x,begin_y,mouse_x,mouse_y);
-        canvas->drawRect(rect,paint);
-    }
-
     canvas->setMatrix(ctx.view_mat);
+    paint.setStrokeWidth(1/ctx.view_mat.getScaleX());
 
     canvas->drawLine(0,-5000,0,5000,paint);
     canvas->drawLine(-5000,0,5000,0,paint);
@@ -153,6 +148,13 @@ void MainWindow::onPaint(SkSurface* surface) {
     Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
     anydict_t empty;
     drawDrawing(drawing,empty);    
+
+    if(multiSelecting){
+        SkRect rect = SkRect::MakeLTRB(begin_x,begin_y,mouse_x,mouse_y);
+        canvas->drawRect(rect,paint);
+    }
+
+    paint.setStrokeWidth(1);
 
     canvas->restore();
     if(viewHit)
@@ -174,17 +176,30 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
     mouse_y = y;
 
     if(modifiers == skui::ModifierKey::kButton1 && previousModifiers == skui::ModifierKey::kNone){
-      begin_x = x;
-      begin_y = y;
-      multiSelecting = true;
+        SkPoint mouse_points[1] = {{x,y}};
+        ctx.inverse_view_mat.mapPoints(mouse_points,1);
+
+        begin_x = mouse_points[0].x();
+        begin_y = mouse_points[0].y();
+        multiSelecting = true;
     }
+
+    previousModifiers = modifiers;    
     
     if(multiSelecting){
+        SkPoint mouse_points[1] = {{x,y}};
+        ctx.inverse_view_mat.mapPoints(mouse_points,1);
+
+        mouse_x = mouse_points[0].x();
+        mouse_y = mouse_points[0].y();
+        
+        if(state == skui::InputState::kDown)
+            multiSelecting=false;
+
         fWindow->inval();    
         return true;
     }
     
-    previousModifiers = modifiers;    
     if (skui::InputState::kDown == state) {
         if(moving){
             moving=false;
@@ -280,6 +295,7 @@ bool MainWindow::onKey(skui::Key key, skui::InputState state, skui::ModifierKey 
         case skui::Key::kRight: ctx.view_mat.postTranslate(t,0.0); break;
         case skui::Key::kUp: ctx.view_mat.postTranslate(0.0,t); break;
         case skui::Key::kDown: ctx.view_mat.postTranslate(0.0,-t); break;        
+        case skui::Key::kEscape: multiSelecting=false; break;        
         default: break;
     }
     fWindow->inval();
