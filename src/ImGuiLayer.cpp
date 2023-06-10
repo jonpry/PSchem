@@ -155,33 +155,54 @@ void ImGuiLayer::onPrePaint() {
     ImGui::NewFrame();
 }
 
-void ImGuiLayer::onPaint(SkSurface* surface) {
+void ImGuiLayer::render() {
     // This causes ImGui to rebuild vertex/index data based on all immediate-mode commands
     // (widgets, etc...) that have been issued
     ImGui::Render();
 
     // Then we fetch the most recent data, and convert it so we can render with Skia
     const ImDrawData* drawData = ImGui::GetDrawData();
-    SkTDArray<SkPoint> pos;
-    SkTDArray<SkPoint> uv;
-    SkTDArray<SkColor> color;
 
-    auto canvas = surface->getCanvas();
+    std::vector<SkTDArray<SkPoint>> new_pos;
+    std::vector<SkTDArray<SkPoint>> new_uv;
+    std::vector<SkTDArray<SkColor>> new_color;
 
+    new_pos.resize(drawData->CmdListsCount);
+    new_uv.resize(drawData->CmdListsCount);
+    new_color.resize(drawData->CmdListsCount);
+    
+    printf("clc: %d\n", drawData->CmdListsCount);
     for (int i = 0; i < drawData->CmdListsCount; ++i) {
         const ImDrawList* drawList = drawData->CmdLists[i];
-
+        printf("dl: %d %d\n", i, drawList->VtxBuffer.size());
         // De-interleave all vertex data (sigh), convert to Skia types
-        pos.clear(); uv.clear(); color.clear();
         for (int j = 0; j < drawList->VtxBuffer.size(); ++j) {
             const ImDrawVert& vert = drawList->VtxBuffer[j];
-            pos.push_back(SkPoint::Make(vert.pos.x, vert.pos.y));
-            uv.push_back(SkPoint::Make(vert.uv.x, vert.uv.y));
-            color.push_back(vert.col);
+            new_pos[i].push_back(SkPoint::Make(vert.pos.x, vert.pos.y));
+            new_uv[i].push_back(SkPoint::Make(vert.uv.x, vert.uv.y));
+            new_color[i].push_back(vert.col);
         }
         // ImGui colors are RGBA
-        SkSwapRB(color.begin(), color.begin(), color.size());
+        SkSwapRB(new_color[i].begin(), new_color[i].begin(), new_color[i].size());
+    }
+    
+    if(pos != new_pos || uv != new_uv || color != new_color)
+        printf("changed\n");
+    
+    pos = new_pos;
+    uv = new_uv;
+    color = new_color;
+}
 
+void ImGuiLayer::onPaint(SkSurface* surface) {
+    render();
+
+    const ImDrawData* drawData = ImGui::GetDrawData();
+
+    auto canvas = surface->getCanvas();
+    
+    for (int i = 0; i < drawData->CmdListsCount; ++i) {
+        const ImDrawList* drawList = drawData->CmdLists[i];
         int indexOffset = 0;
 
         // Draw everything with canvas.drawVertices...
@@ -201,7 +222,7 @@ void ImGuiLayer::onPaint(SkSurface* surface) {
                     // canvas to be clipped and translated so that the callback code gets to use
                     // Skia to render a widget in the middle of an ImGui panel.
                     ImDrawIdx rectIndex = drawList->IdxBuffer[indexOffset];
-                    SkPoint tl = pos[rectIndex], br = pos[rectIndex + 2];
+                    SkPoint tl = pos[i][rectIndex], br = pos[i][rectIndex + 2];
                     canvas->clipRect(SkRect::MakeLTRB(tl.fX, tl.fY, br.fX, br.fY));
                     canvas->translate(tl.fX, tl.fY);
                     fSkiaWidgetFuncs[idIndex](canvas);
@@ -213,7 +234,7 @@ void ImGuiLayer::onPaint(SkSurface* surface) {
                                                       drawCmd->ClipRect.z, drawCmd->ClipRect.w));
                     auto vertices = SkVertices::MakeCopy(SkVertices::kTriangles_VertexMode,
                                                          drawList->VtxBuffer.size(),
-                                                         pos.begin(), uv.begin(), color.begin(),
+                                                         pos[i].begin(), uv[i].begin(), color[i].begin(),
                                                          drawCmd->ElemCount,
                                                          drawList->IdxBuffer.begin() + indexOffset);
                     canvas->drawVertices(vertices, SkBlendMode::kModulate, *paint);

@@ -131,11 +131,17 @@ public:
     bool onMouseWheel(float delta, skui::ModifierKey modifiers) override;
     bool onKey(skui::Key key, skui::InputState state, skui::ModifierKey modifiers) override;
     bool onChar(SkUnichar c, skui::ModifierKey modifiers) override;
+    
+    void render();
 
 private:
     sk_app::Window* fWindow;
     SkPaint fFontPaint;
     skia_private::TArray<SkiaWidgetFunc> fSkiaWidgetFuncs;
+
+    std::vector<SkTDArray<SkPoint>> pos;
+    std::vector<SkTDArray<SkPoint>> uv;
+    std::vector<SkTDArray<SkColor>> color;
 };
 
 #endif
