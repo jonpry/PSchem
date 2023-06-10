@@ -37,7 +37,7 @@ static void build_ImFontAtlas(ImFontAtlas& atlas, SkPaint& fontPaint) {
     atlas.TexID = &fontPaint;
 }
 
-ImGuiLayer::ImGuiLayer() {
+ImGuiLayer::ImGuiLayer(ImGuiRenderer *renderer) : fRenderer(renderer) {
     // ImGui initialization:
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -115,8 +115,11 @@ bool ImGuiLayer::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
     }
 
     //TODO: maybe a lot
-    if(io.WantCaptureMouse)
-        fWindow->inval();
+    render();
+    
+    if ( state != skui::InputState::kMove ) {
+       fRenderer->idleRender();
+    }
         
     return io.WantCaptureMouse;
 }
@@ -125,7 +128,7 @@ bool ImGuiLayer::onMouseWheel(float delta, skui::ModifierKey modifiers) {
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheel += delta;
     if(io.WantCaptureMouse)
-        fWindow->inval();
+        render();
     return io.WantCaptureMouse;
 }
 
@@ -136,6 +139,10 @@ void ImGuiLayer::skiaWidget(const ImVec2& size, SkiaWidgetFunc func) {
 }
 
 void ImGuiLayer::onPrePaint() {
+
+}
+
+void ImGuiLayer::render() {
     // Update ImGui input
     ImGuiIO& io = ImGui::GetIO();
 
@@ -153,9 +160,9 @@ void ImGuiLayer::onPrePaint() {
     io.KeySuper = io.KeysDown[static_cast<int>(skui::Key::kSuper)];
 
     ImGui::NewFrame();
-}
-
-void ImGuiLayer::render() {
+    
+    fRenderer->drawImGui();
+    
     // This causes ImGui to rebuild vertex/index data based on all immediate-mode commands
     // (widgets, etc...) that have been issued
     ImGui::Render();
@@ -171,10 +178,10 @@ void ImGuiLayer::render() {
     new_uv.resize(drawData->CmdListsCount);
     new_color.resize(drawData->CmdListsCount);
     
-    printf("clc: %d\n", drawData->CmdListsCount);
+   // printf("clc: %d\n", drawData->CmdListsCount);
     for (int i = 0; i < drawData->CmdListsCount; ++i) {
         const ImDrawList* drawList = drawData->CmdLists[i];
-        printf("dl: %d %d\n", i, drawList->VtxBuffer.size());
+    //    printf("dl: %d %d\n", i, drawList->VtxBuffer.size());
         // De-interleave all vertex data (sigh), convert to Skia types
         for (int j = 0; j < drawList->VtxBuffer.size(); ++j) {
             const ImDrawVert& vert = drawList->VtxBuffer[j];
@@ -186,8 +193,10 @@ void ImGuiLayer::render() {
         SkSwapRB(new_color[i].begin(), new_color[i].begin(), new_color[i].size());
     }
     
-    if(pos != new_pos || uv != new_uv || color != new_color)
+    if(pos != new_pos || uv != new_uv || color != new_color){
+        fWindow->inval();
         printf("changed\n");
+    }
     
     pos = new_pos;
     uv = new_uv;
@@ -195,9 +204,10 @@ void ImGuiLayer::render() {
 }
 
 void ImGuiLayer::onPaint(SkSurface* surface) {
-    render();
 
     const ImDrawData* drawData = ImGui::GetDrawData();
+    if(!drawData)
+       return;
 
     auto canvas = surface->getCanvas();
     
@@ -251,7 +261,7 @@ bool ImGuiLayer::onKey(skui::Key key, skui::InputState state, skui::ModifierKey 
     ImGuiIO& io = ImGui::GetIO();
     io.KeysDown[static_cast<int>(key)] = (skui::InputState::kDown == state);
     if(io.WantCaptureKeyboard)
-        fWindow->inval();
+        render();
     return io.WantCaptureKeyboard;
 }
 
@@ -259,8 +269,8 @@ bool ImGuiLayer::onChar(SkUnichar c, skui::ModifierKey modifiers) {
     ImGuiIO& io = ImGui::GetIO();
     if (io.WantTextInput) {
         if (c > 0 && c < 0x10000) {
-            fWindow->inval();
             io.AddInputCharacter(c);
+            render();
         }
         return true;
     }

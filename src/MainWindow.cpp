@@ -37,7 +37,7 @@ Application* Application::Create(int argc, char** argv, void* platformData) {
 namespace pschem {
 
 MainWindow::MainWindow(int argc, char** argv, void* platformData)
-        : fBackendType(Window::kNativeGL_BackendType),
+        : fBackendType(Window::kNativeGL_BackendType), fImGuiLayer(this),
         fRotationAngle(0), moving(false), multiSelecting(false) {
   
   
@@ -61,7 +61,7 @@ MainWindow::MainWindow(int argc, char** argv, void* platformData)
     }
 #endif   
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
+    mIdleRender=1;
 
     fWindow = Window::CreateNativeWindow(platformData);
     fWindow->setRequestedDisplayParams(displayParams);
@@ -86,6 +86,8 @@ MainWindow::MainWindow(int argc, char** argv, void* platformData)
 
     for(int i=0; i < 22; i++)
         colorMap[i] = SkColorSetARGB(255,colors[i] >> 16, (colors[i] >> 8) & 0xff, colors[i] & 0xff);
+        
+    fImGuiLayer.render();    
 }
 
 MainWindow::~MainWindow() {
@@ -162,14 +164,21 @@ void MainWindow::onPaint(SkSurface* surface) {
     canvas->restore();
     if(viewHit)
        hitSurface->draw(canvas,0,0,&paint);
-
-    this->drawImGui();
 }
 
 void MainWindow::onIdle() {
+    if(mIdleRender){
+        mIdleRender--;
+        fImGuiLayer.render();        
+    }
+}
+
+void MainWindow::idleRender() {
+    mIdleRender++;
 }
 
 void MainWindow::drawImGui() {
+
     if(ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
          if(ImGui::MenuItem("New")) {
@@ -185,6 +194,19 @@ void MainWindow::drawImGui() {
          }
 
          if(ImGui::MenuItem("Exit")) {
+         }
+
+         ImGui::EndMenu();
+       }
+
+      if (ImGui::BeginMenu("Edit")) {
+         if(ImGui::MenuItem("Cut")) {
+         }
+
+         if(ImGui::MenuItem("Copy")) {
+         }
+
+         if(ImGui::MenuItem("Paste")) {
          }
 
          ImGui::EndMenu();
@@ -373,6 +395,7 @@ Drawing &MainWindow::getDrawing(string fname){
 
 void MainWindow::onResize(int width, int height){
     hitSurface.reset();
+    fImGuiLayer.render();        
 }
 
 void MainWindow::beginDrag(){

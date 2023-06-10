@@ -114,9 +114,15 @@ struct DragCanvas {
 
 }  // namespace ImGui
 
+class ImGuiRenderer {
+ public:
+   virtual void drawImGui()=0;
+   virtual void idleRender()=0;
+};
+
 class ImGuiLayer : public sk_app::Window::Layer {
 public:
-    ImGuiLayer();
+    ImGuiLayer(ImGuiRenderer *renderer);
     ~ImGuiLayer() override;
 
     void setScaleFactor(float scaleFactor);
@@ -135,6 +141,7 @@ public:
     void render();
 
 private:
+    ImGuiRenderer *fRenderer;
     sk_app::Window* fWindow;
     SkPaint fFontPaint;
     skia_private::TArray<SkiaWidgetFunc> fSkiaWidgetFuncs;

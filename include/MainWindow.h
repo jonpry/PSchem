@@ -20,7 +20,7 @@ class SkSurface;
 
 namespace pschem {
 
-class MainWindow : public sk_app::Application, sk_app::Window::Layer, IIdReceiver {
+class MainWindow : public sk_app::Application, sk_app::Window::Layer, IIdReceiver, ImGuiRenderer {
 public:
     MainWindow(int argc, char** argv, void* platformData);
     ~MainWindow() override;
@@ -36,9 +36,12 @@ public:
     bool onChar(SkUnichar c, skui::ModifierKey modifiers) override;
 
     void SetId(int id, Drawable* tgt) override;
+    void drawImGui() override;
+    void idleRender() override;
 
     void beginDrag();
 private:
+    int mIdleRender;
     void updateTitle();
 
     ImGuiLayer             fImGuiLayer;
@@ -48,7 +51,6 @@ private:
     SkScalar fRotationAngle;
     std::array<SkColor,22> colorMap;
     
-    void drawImGui();
 
     sk_sp<SkTypeface> typeface;
     DrawContext ctx;
