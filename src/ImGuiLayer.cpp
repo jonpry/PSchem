@@ -42,6 +42,7 @@ ImGuiLayer::ImGuiLayer(ImGuiRenderer *renderer) : fRenderer(renderer) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
 
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; 
     // Keymap...
     io.KeyMap[ImGuiKey_Tab]        = (int)skui::Key::kTab;
     io.KeyMap[ImGuiKey_LeftArrow]  = (int)skui::Key::kLeft;
@@ -201,6 +202,27 @@ void ImGuiLayer::render() {
     pos = new_pos;
     uv = new_uv;
     color = new_color;
+
+
+    ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+    if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
+    {
+        // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
+        fWindow->setCursor(false, skui::Pointer::kArrow);//glfwSetInputMode(g_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    }
+    else
+    {
+        switch( imgui_cursor) {
+            case ImGuiMouseCursor_Arrow: return fWindow->setCursor(true, skui::Pointer::kArrow);
+            case ImGuiMouseCursor_TextInput: return fWindow->setCursor(true, skui::Pointer::kTextInput);
+            case ImGuiMouseCursor_ResizeAll: return fWindow->setCursor(true, skui::Pointer::kResizeAll);
+            case ImGuiMouseCursor_ResizeNS: return fWindow->setCursor(true, skui::Pointer::kResizeNS);
+            case ImGuiMouseCursor_ResizeEW: return fWindow->setCursor(true, skui::Pointer::kResizeEW);
+            case ImGuiMouseCursor_ResizeNESW: return fWindow->setCursor(true, skui::Pointer::kResizeNESW);
+            case ImGuiMouseCursor_ResizeNWSE: return fWindow->setCursor(true, skui::Pointer::kResizeNWSE);
+            case ImGuiMouseCursor_Hand: return fWindow->setCursor(true, skui::Pointer::kHand);
+        }
+    }
 }
 
 void ImGuiLayer::onPaint(SkSurface* surface) {

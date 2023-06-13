@@ -79,10 +79,10 @@ MainWindow::MainWindow(int argc, char** argv, void* platformData)
     ctx.font.setSize(80);    
     
     uint32_t colors[] = {0x000000, 0x00ccee, 0x3f3f3f, 0xcccccc, 0x88dd00,
-                        0xbb2200, 0x00ccee, 0xff0000, 0xffff00, 0xffffff,
-                        0xff00ff, 0x00ff00, 0x0000cc, 0xaaaa00, 0xaaccaa,
-                        0xff7777, 0xbfff81, 0x00ffcc, 0xce0097, 0xd2d46b,
-                        0xef6158, 0xfdb200};
+                         0xbb2200, 0x00ccee, 0xff0000, 0xffff00, 0xffffff,
+                         0xff00ff, 0x00ff00, 0x0000cc, 0xaaaa00, 0xaaccaa,
+                         0xff7777, 0xbfff81, 0x00ffcc, 0xce0097, 0xd2d46b,
+                         0xef6158, 0xfdb200};
 
     for(int i=0; i < 22; i++)
         colorMap[i] = SkColorSetARGB(255,colors[i] >> 16, (colors[i] >> 8) & 0xff, colors[i] & 0xff);
@@ -193,6 +193,8 @@ void MainWindow::drawImGui() {
          if(ImGui::MenuItem("Save As")) {
          }
 
+         ImGui::Separator();
+
          if(ImGui::MenuItem("Exit")) {
          }
 
@@ -200,7 +202,14 @@ void MainWindow::drawImGui() {
        }
 
       if (ImGui::BeginMenu("Edit")) {
-         if(ImGui::MenuItem("Cut")) {
+         if(ImGui::MenuItem("Undo")) {
+         }
+
+         if(ImGui::MenuItem("Redo")) {
+         }
+
+         ImGui::Separator();
+         if(ImGui::MenuItem("Cut", "CTRL-X")) {
          }
 
          if(ImGui::MenuItem("Copy")) {
@@ -238,22 +247,31 @@ void MainWindow::drawImGui() {
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
     ImGui::End();
 
-    bool t = true;
-    ImGui::ShowDemoWindow(&t);
+    // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiCond_FirstUseEver);
+
+    // Main body of the Demo window starts here.
+    if (!ImGui::Begin("Properties", 0, 0))
+    {
+        ImGui::End();
+        return;
+    }
+    
+    static float x=0,y=0;
+    ImGui::InputFloat("X",&x,0.01f, 1.0f, "%.3f");
+    ImGui::InputFloat("Y",&y,0.01f, 1.0f, "%.3f");
+    
+    ImGui::End();
+    
+    ImGui::ShowDemoWindow(0);
 }
 
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {
     mouse_x = x;
     mouse_y = y;
 
-    if(modifiers == skui::ModifierKey::kButton1 && previousModifiers == skui::ModifierKey::kNone){
-        SkPoint mouse_points[1] = {{x,y}};
-        ctx.inverse_view_mat.mapPoints(mouse_points,1);
-
-        begin_x = mouse_points[0].x();
-        begin_y = mouse_points[0].y();
-        multiSelecting = true;
-    }
 
     previousModifiers = modifiers;    
     
@@ -264,7 +282,7 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         mouse_x = mouse_points[0].x();
         mouse_y = mouse_points[0].y();
         
-        if(state == skui::InputState::kDown)
+        if(state == skui::InputState::kUp)
             multiSelecting=false;
 
         fWindow->inval();    
@@ -324,7 +342,17 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         ctx.selected = selectedId>=0?byId[selectedId]:0;
         printf("Selected: %d %p\n", selectedId, ctx.selected);
 
-        fWindow->inval();    
+        fWindow->inval(); 
+        
+        SkPoint mouse_points[1] = {{x,y}};
+        ctx.inverse_view_mat.mapPoints(mouse_points,1);
+
+        begin_x = mouse_points[0].x();
+        begin_y = mouse_points[0].y();
+        mouse_x = begin_x;
+        mouse_y = begin_y;
+        multiSelecting = true;
+           
     }
     
     if(moving) {
