@@ -55,6 +55,7 @@ private:
     sk_sp<SkTypeface> typeface;
     DrawContext ctx;
     int mouse_x, mouse_y, begin_x, begin_y;
+    int mouse_drawing_x, mouse_drawing_y, begin_drawing_x, begin_drawing_y;
     bool moving;
     bool multiSelecting;
     

@@ -149,6 +149,8 @@ private:
     std::vector<SkTDArray<SkPoint>> pos;
     std::vector<SkTDArray<SkPoint>> uv;
     std::vector<SkTDArray<SkColor>> color;
+    
+    ImGuiMouseCursor last_cursor;
 };
 
 #endif

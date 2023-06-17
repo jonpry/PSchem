@@ -155,7 +155,7 @@ void MainWindow::onPaint(SkSurface* surface) {
     drawDrawing(drawing,empty);    
 
     if(multiSelecting){
-        SkRect rect = SkRect::MakeLTRB(begin_x,begin_y,mouse_x,mouse_y);
+        SkRect rect = SkRect::MakeLTRB(begin_drawing_x,begin_drawing_y,mouse_drawing_x,mouse_drawing_y);
         canvas->drawRect(rect,paint);
     }
 
@@ -176,6 +176,45 @@ void MainWindow::onIdle() {
 void MainWindow::idleRender() {
     mIdleRender++;
 }
+
+static void ShowPlaceholderObject(Drawable *object)
+{
+    // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
+    ImGui::PushID((uint32_t)(uint64_t)object);
+
+    // Text and Tree nodes are less high than framed widgets, using AlignTextToFramePadding() we add vertical spacing to make the tree lines equal high.
+    ImGui::TableNextRow();
+    ImGui::TableSetColumnIndex(0);
+    ImGui::AlignTextToFramePadding();
+    bool node_open = ImGui::TreeNodeEx("Object", ImGuiTreeNodeFlags_DefaultOpen, "%s", object->ClassName());
+
+    if (node_open)
+    {
+        int i=0;
+        for(auto gp : object->getPropPairs()){
+            ImGui::PushID(i++); // Use field index as identifier.
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::AlignTextToFramePadding();
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+
+            if(gp.type() == typeid(GuiProp<float>)){
+                ImGui::TreeNodeEx("Field", flags, any_cast<GuiProp<float>>(gp).m_name.c_str());
+
+                ImGui::TableSetColumnIndex(1);
+                ImGui::SetNextItemWidth(-FLT_MIN);
+
+                ImGui::DragFloat("##value", any_cast<GuiProp<float>>(gp).m_field, 0.01f);
+            }
+            ImGui::NextColumn();
+
+            ImGui::PopID();        
+        }
+        ImGui::TreePop();
+    }
+    ImGui::PopID();
+}
+
 
 void MainWindow::drawImGui() {
 
@@ -259,13 +298,20 @@ void MainWindow::drawImGui() {
         return;
     }
     
-    static float x=0,y=0;
-    ImGui::InputFloat("X",&x,0.01f, 1.0f, "%.3f");
-    ImGui::InputFloat("Y",&y,0.01f, 1.0f, "%.3f");
-    
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
+    if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable))
+    {
+        if(ctx.selected) {
+            ShowPlaceholderObject(ctx.selected);
+            ImGui::Separator();
+        }
+        ImGui::EndTable();
+    }
+    ImGui::PopStyleVar();
     ImGui::End();
+
     
-    ImGui::ShowDemoWindow(0);
+  //  ImGui::ShowDemoWindow(0);
 }
 
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {
@@ -279,8 +325,8 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         SkPoint mouse_points[1] = {{x,y}};
         ctx.inverse_view_mat.mapPoints(mouse_points,1);
 
-        mouse_x = mouse_points[0].x();
-        mouse_y = mouse_points[0].y();
+        mouse_drawing_x = mouse_points[0].x();
+        mouse_drawing_y = mouse_points[0].y();
         
         if(state == skui::InputState::kUp)
             multiSelecting=false;
@@ -347,12 +393,11 @@ bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey
         SkPoint mouse_points[1] = {{x,y}};
         ctx.inverse_view_mat.mapPoints(mouse_points,1);
 
-        begin_x = mouse_points[0].x();
-        begin_y = mouse_points[0].y();
-        mouse_x = begin_x;
-        mouse_y = begin_y;
+        begin_drawing_x = mouse_points[0].x();
+        begin_drawing_y = mouse_points[0].y();
+        mouse_drawing_x = begin_drawing_x;
+        mouse_drawing_y = begin_drawing_y;
         multiSelecting = true;
-           
     }
     
     if(moving) {

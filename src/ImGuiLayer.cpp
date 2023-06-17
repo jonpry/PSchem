@@ -65,6 +65,8 @@ ImGuiLayer::ImGuiLayer(ImGuiRenderer *renderer) : fRenderer(renderer) {
     io.KeyMap[ImGuiKey_Z]          = (int)skui::Key::kZ;
 
     build_ImFontAtlas(*io.Fonts, fFontPaint);
+    
+    last_cursor = ImGuiMouseCursor_None;
 }
 
 ImGuiLayer::~ImGuiLayer() {
@@ -205,6 +207,8 @@ void ImGuiLayer::render() {
 
 
     ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+    if ( last_cursor == imgui_cursor )
+        return;
     if (imgui_cursor == ImGuiMouseCursor_None || io.MouseDrawCursor)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
@@ -221,8 +225,10 @@ void ImGuiLayer::render() {
             case ImGuiMouseCursor_ResizeNESW: return fWindow->setCursor(true, skui::Pointer::kResizeNESW);
             case ImGuiMouseCursor_ResizeNWSE: return fWindow->setCursor(true, skui::Pointer::kResizeNWSE);
             case ImGuiMouseCursor_Hand: return fWindow->setCursor(true, skui::Pointer::kHand);
+            case ImGuiMouseCursor_NotAllowed: return fWindow->setCursor(true, skui::Pointer::kNotAllowed);
         }
     }
+    last_cursor = imgui_cursor;
 }
 
 void ImGuiLayer::onPaint(SkSurface* surface) {
