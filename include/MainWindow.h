@@ -14,6 +14,8 @@
 #include <string>
 #include <map>
 
+#include "misc/cpp/imgui_stdlib.h"
+
 using namespace std;
 
 class SkSurface;

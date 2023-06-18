@@ -1,3 +1,4 @@
+
 #include "main.h"
 #include <vector>
 #include <stdio.h>
@@ -20,6 +21,10 @@ void Arc::draw(SkPaint &paint, DrawContext &ctx){
 
 	ctx.hitCanvas->drawArc(rect, sa, ea, false, paint);
 
+}
+
+std::vector<std::any> Arc::getPropPairs() {
+    return {GuiProp("x",&c.m_x,1.0f),GuiProp("y",&c.m_y,1.0f),GuiProp("radius",&rad,1.0f),GuiProp("start",&sa,1.0f),GuiProp("end",&ea,1.0f)};
 }
 
 }; //Namespace pschem

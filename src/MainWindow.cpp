@@ -177,6 +177,55 @@ void MainWindow::idleRender() {
     mIdleRender++;
 }
 
+static void ShowPlaceholderObject(std::vector<std::any> pp){
+    int i=0;
+    for(auto gp : pp){
+        ImGui::PushID(i++); // Use field index as identifier.
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::AlignTextToFramePadding();
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+
+        if(gp.type() == typeid(GuiProp<float>)){
+            auto mgp = any_cast<GuiProp<float>>(gp);
+            ImGui::TreeNodeEx("Field", flags, mgp.m_name.c_str());
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(-FLT_MIN);
+
+            ImGui::DragFloat("##value", mgp.m_field, mgp.m_increment);
+        }
+
+        if(gp.type() == typeid(GuiProp<int>)){
+            auto mgp = any_cast<GuiProp<int>>(gp);
+            ImGui::TreeNodeEx("Field", flags, mgp.m_name.c_str());
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(-FLT_MIN);
+
+            ImGui::DragInt("##value", mgp.m_field, mgp.m_increment, mgp.m_min, mgp.m_max);
+        }
+
+        if(gp.type() == typeid(GuiProp<std::string>)){
+            auto mgp = any_cast<GuiProp<string>>(gp);
+            ImGui::TreeNodeEx("Field", flags, mgp.m_name.c_str());
+
+            ImGui::TableSetColumnIndex(1);
+            ImGui::SetNextItemWidth(-FLT_MIN);
+
+            if(mgp.m_editable)
+                ImGui::InputText("edittext",mgp.m_field);            
+            else
+                ImGui::Text(mgp.m_field->c_str());
+        }
+
+        ImGui::NextColumn();
+
+        ImGui::PopID();        
+    }
+}
+
+
 static void ShowPlaceholderObject(Drawable *object)
 {
     // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
@@ -191,24 +240,19 @@ static void ShowPlaceholderObject(Drawable *object)
     if (node_open)
     {
         int i=0;
-        for(auto gp : object->getPropPairs()){
-            ImGui::PushID(i++); // Use field index as identifier.
+        ShowPlaceholderObject(object->getPropPairs());
+        Component *c = dynamic_cast<Component*>(object);
+        if(c){
+            ImGui::PushID((uint32_t)(uint64_t)object+1);
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::AlignTextToFramePadding();
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
-
-            if(gp.type() == typeid(GuiProp<float>)){
-                ImGui::TreeNodeEx("Field", flags, any_cast<GuiProp<float>>(gp).m_name.c_str());
-
-                ImGui::TableSetColumnIndex(1);
-                ImGui::SetNextItemWidth(-FLT_MIN);
-
-                ImGui::DragFloat("##value", any_cast<GuiProp<float>>(gp).m_field, 0.01f);
-            }
-            ImGui::NextColumn();
-
-            ImGui::PopID();        
+            bool props_open = ImGui::TreeNodeEx("Object", ImGuiTreeNodeFlags_DefaultOpen, "Properties");
+            if(props_open){
+                ShowPlaceholderObject(c->getExplicitPropPairs());            
+                ImGui::TreePop();
+            }  
+            ImGui::PopID();              
         }
         ImGui::TreePop();
     }
@@ -311,7 +355,7 @@ void MainWindow::drawImGui() {
     ImGui::End();
 
     
-  //  ImGui::ShowDemoWindow(0);
+    ImGui::ShowDemoWindow(0);
 }
 
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {

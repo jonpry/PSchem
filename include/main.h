@@ -27,10 +27,15 @@ class MainWindow;
 template<typename T>
 class GuiProp {
  public:
-    GuiProp(std::string name, T* field) : m_name(name), m_field(field) {}
+    GuiProp(std::string name, T* field, T increment, T min = std::numeric_limits<T>::min(), T max = std::numeric_limits<T>::max()) : m_name(name), m_field(field), m_increment(increment), m_min(min), m_max(max) {}
+
+    GuiProp(std::string name, T* field, bool editable=true) : m_name(name), m_field(field), m_editable(editable) {}
     
     std::string m_name;
     T* m_field; 
+    T  m_increment;
+    T  m_min, m_max;
+    bool m_editable;
 };
 
 class Point {
@@ -85,7 +90,7 @@ class Text : public Drawable{
     void flip();
     
     const char *ClassName() { return "Text"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x),GuiProp("y",&pt.m_y)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x,1.0f),GuiProp("y",&pt.m_y,1.0f)};}
     
     std::string text;
     float size;
@@ -104,8 +109,9 @@ class Component : public Drawable {
     void flip();
     void move(float dx, float dy);
     const char *ClassName() { return "Component"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x),GuiProp("y",&pt.m_y)};}
-
+    std::vector<std::any> getPropPairs();
+    std::vector<std::any> getExplicitPropPairs();
+    
     std::string symbol;
     Point pt;
     int rot, mirror;
@@ -117,7 +123,7 @@ class Line : public Drawable {
     Line(int layer, float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
     const char *ClassName() { return "Line"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x),GuiProp("y1",&p1.m_y),GuiProp("x2",&p2.m_x),GuiProp("y2",&p2.m_y)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x,1.0f),GuiProp("y1",&p1.m_y,1.0f),GuiProp("x2",&p2.m_x,1.0f),GuiProp("y2",&p2.m_y,1.0f)};}
     
     int layer;
     Point p1, p2;
@@ -129,7 +135,7 @@ class Net : public Drawable{
     Net(float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
     const char *ClassName() { return "Net"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x),GuiProp("y1",&p1.m_y),GuiProp("x2",&p2.m_x),GuiProp("y2",&p2.m_y)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x,1.0f),GuiProp("y1",&p1.m_y,1.0f),GuiProp("x2",&p2.m_x,1.0f),GuiProp("y2",&p2.m_y,1.0f)};}
 
     Point p1, p2;
     void move(float dx, float dy);
@@ -142,7 +148,7 @@ class Box : public Drawable{
     Box(int layer, float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
     const char *ClassName() { return "Box"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x),GuiProp("y1",&p1.m_y),GuiProp("x2",&p2.m_x),GuiProp("y2",&p2.m_y)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x,1.0f),GuiProp("y1",&p1.m_y,1.0f),GuiProp("x2",&p2.m_x,1.0f),GuiProp("y2",&p2.m_y,1.0f)};}
     
     int layer;
     Point p1,p2;
@@ -154,7 +160,7 @@ class Arc : public Drawable{
     Arc(int layer, float cx, float cy, float rad, float sa, float ea, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
     const char *ClassName() { return "Arc"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x",&c.m_x),GuiProp("y",&c.m_y)};}
+    std::vector<std::any> getPropPairs();
     
     int layer;
     Point c;
