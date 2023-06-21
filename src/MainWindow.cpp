@@ -88,6 +88,9 @@ MainWindow::MainWindow(int argc, char** argv, void* platformData)
         colorMap[i] = SkColorSetARGB(255,colors[i] >> 16, (colors[i] >> 8) & 0xff, colors[i] & 0xff);
         
     fImGuiLayer.render();    
+    
+    m_drawing = &getDrawing("passgate.sch");
+
 }
 
 MainWindow::~MainWindow() {
@@ -148,11 +151,11 @@ void MainWindow::onPaint(SkSurface* surface) {
     ctx.objId = 0;
     ctx.parent = 0;
     ctx.window = this;
+    ctx.props.Clear();
         
     hitCanvas->setMatrix(canvas->getTotalMatrix());
-    Drawing &drawing = getDrawing("passgate.sch");//sky130_fd_pr/nfet_01v8.sym");//passgate.sch");
-    anydict_t empty;
-    drawDrawing(drawing,empty);    
+    
+    drawDrawing(*m_drawing,m_drawing->m_props);    
 
     if(multiSelecting){
         SkRect rect = SkRect::MakeLTRB(begin_drawing_x,begin_drawing_y,mouse_drawing_x,mouse_drawing_y);
@@ -347,15 +350,19 @@ void MainWindow::drawImGui() {
     {
         if(ctx.selected) {
             ShowPlaceholderObject(ctx.selected);
-            ImGui::Separator();
+        }else{
+            if(m_drawing)
+                ShowPlaceholderObject(m_drawing);        
         }
+
+        ImGui::Separator();
         ImGui::EndTable();
     }
     ImGui::PopStyleVar();
     ImGui::End();
 
     
-    ImGui::ShowDemoWindow(0);
+ //   ImGui::ShowDemoWindow(0);
 }
 
 bool MainWindow::onMouse(int x, int y, skui::InputState state, skui::ModifierKey modifiers) {
@@ -532,7 +539,7 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
     paint.setStrokeCap(SkPaint::Cap::kRound_Cap);
     paint.setStrokeJoin(SkPaint::Join::kRound_Join);
     paint.setStyle(SkPaint::Style::kStroke_Style);
-    ctx.props = props;
+    ctx.props.Push(&props);
 
     paint.setStyle(SkPaint::Style::kFill_Style);
 
@@ -584,6 +591,7 @@ void MainWindow::drawDrawing(Drawing &drawing, anydict_t &props){
         ctx.canvas->restore();
     }
 
+    ctx.props.Pop();
 	ctx.canvas->restore();
 }
 

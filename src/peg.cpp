@@ -21,13 +21,13 @@ static float getFloat(any field){
     return any_cast<int>(field);
 }
 
-void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Box> &boxes, vector<Text> &texts, vector<Net> &nets, vector<Component> &components, vector<Poly> &polys){
+void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Box> &boxes, vector<Text> &texts, vector<Net> &nets, vector<Component> &components, vector<Poly> &polys, map<string,any> &props){
     string data = readFile(filename);
     printf("Reading %s\n", filename.c_str());
-
+    
     parser parser(R"(
         Prog        <- (Stmt LINE_BREAK)* Stmt?
-        Stmt        <- RECORD_ID BraceList? NUMBER* Dict?
+        Stmt        <- RECORD_ID (Dict/BraceList)? NUMBER* Dict?
         BraceList   <- '{' PROP_STRING '}'
         Dict        <- '{' Item* '}'
         Item        <- KEY '=' (Value/QUOTED_STRING) LINE_BREAK?
@@ -133,12 +133,13 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
         printf("%s ", statement.id.c_str());
         for(auto f : statement.fields){
             if(f.type() == typeid(float))
-                printf("%f ", any_cast<float>(f));
+                printf("float %f ", any_cast<float>(f));
             else if(f.type() == typeid(string))
-                printf("%s ", any_cast<string>(f).c_str());
+                printf("string %s ", any_cast<string>(f).c_str());
             else if(f.type() == typeid(int))
-                printf("%d ", any_cast<int>(f));
+                printf("int %d ", any_cast<int>(f));
             else{ //map
+                printf("map "); 
                 auto d = any_cast<map<string,any>>(f);
                 for(auto p : d){
                     if(p.second.type() == typeid(string))
@@ -209,6 +210,12 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
                               any_cast<map<string,any>>(statement.fields[5])});
         }
 
+        if(statement.id == "K "){
+            printf("ss %d\n", statement.fields.size());
+            if(statement.fields[0].type() == typeid(map<string,any>))
+                props = any_cast<map<string,any>>(statement.fields[0]);
+        }
+        
         if(statement.id == "P "){
             Poly p(any_cast<int>(statement.fields[0]), any_cast<int>(statement.fields[1]), any_cast<map<string,any>>(statement.fields[statement.fields.size()-1]));
             for(int i=0; i < p.pts.size(); i++){

@@ -20,7 +20,7 @@ static std::string toString(std::any any){
     return "other";
 }
 
-static std::string replace(std::string &input, anydict_t &props){
+static std::string replace(std::string &input, PriorityDict &props){
     vector<char> ret, key;
     for(int i=0; i < input.size(); i++){
         if(input[i] != '@'){
@@ -30,8 +30,8 @@ static std::string replace(std::string &input, anydict_t &props){
         for(i=i+1; i <= input.size(); i++){
             if(i == input.size() || input[i] == ' '){
                 string skey = string(key.begin(),key.end());
-                if(props.find(skey) != props.end()){
-                    string v = toString(props[skey]);
+                if(props[skey]){
+                    string v = toString(*props[skey]);
                     ret.insert(ret.end(),v.begin(),v.end());
                 }else{
                     ret.push_back('@');
@@ -48,7 +48,7 @@ static std::string replace(std::string &input, anydict_t &props){
     return string(ret.begin(),ret.end());
 }
 
-static std::vector<std::string> split(const std::string& target, char c, anydict_t &props)
+static std::vector<std::string> split(const std::string& target, char c, PriorityDict &props)
 {
 	std::string temp;
 	std::stringstream stringstream { target };

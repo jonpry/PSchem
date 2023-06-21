@@ -66,6 +66,8 @@ private:
     map<string,Drawing> drawings;
     vector<Drawable*> byId;
     
+    Drawing* m_drawing;
+    
     sk_sp<SkSurface>           hitSurface;
     skui::ModifierKey          previousModifiers;
 };

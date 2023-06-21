@@ -24,6 +24,19 @@ typedef std::map<std::string,std::any> anydict_t;
 class Drawable;
 class MainWindow;
 
+class PriorityDict {
+ public:
+   PriorityDict(){};
+   
+   void Push(anydict_t* dict) { m_dicts.push_back(dict); }
+   void Pop() { m_dicts.pop_back(); }
+   void Clear() { m_dicts.clear(); }
+   
+   std::any* operator[](std::string &);
+   
+   std::vector<anydict_t*> m_dicts;
+};
+
 template<typename T>
 class GuiProp {
  public:
@@ -57,7 +70,7 @@ class DrawContext {
  public:
     SkFont font, hitFont;
     SkMatrix inverse_view_mat, view_mat; 
-    anydict_t props;
+    PriorityDict props;
     SkCanvas *canvas, *hitCanvas;
     int objId;
     std::array<SkColor,22> colorMap;    
@@ -90,7 +103,7 @@ class Text : public Drawable{
     void flip();
     
     const char *ClassName() { return "Text"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x,1.0f),GuiProp("y",&pt.m_y,1.0f)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x,1.0f),GuiProp("y",&pt.m_y,1.0f),GuiProp("symbol",&text)};}
     
     std::string text;
     float size;
@@ -180,10 +193,13 @@ class Poly : public Drawable{
  private:
 };
 
-class Drawing {
+class Drawing : public Drawable{
  public:
     explicit Drawing(std::string filename);
 
+    void draw(SkPaint &paint, DrawContext& ctx) {}
+    const char *ClassName() { return "Drawing"; }
+ 
     std::vector<Line> lines;
     std::vector<Arc> arcs;
     std::vector<Box> boxes;
