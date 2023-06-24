@@ -20,7 +20,7 @@ static std::string toString(std::any any){
     return "other";
 }
 
-static std::string replace(std::string &input, PriorityDict &props){
+static std::string replace(const std::string &input, PriorityDict &props){
     vector<char> ret, key;
     for(int i=0; i < input.size(); i++){
         if(input[i] != '@'){
@@ -50,12 +50,11 @@ static std::string replace(std::string &input, PriorityDict &props){
 
 static std::vector<std::string> split(const std::string& target, char c, PriorityDict &props)
 {
-	std::string temp;
-	std::stringstream stringstream { target };
+	std::string temp = replace(target,props);
+	std::stringstream stringstream { temp };
 	std::vector<std::string> result;
 
 	while (std::getline(stringstream, temp, c)) {
-	    temp = replace(temp, props);
 		result.push_back(temp);
 	}
 
@@ -77,7 +76,6 @@ void Text::draw(SkPaint &paint, DrawContext &ctx){
     ctx.font.setSize(size*50);
     SkFontMetrics metrics;
     ctx.font.getMetrics(&metrics);
-
 
     auto texts = split(text,'\n',ctx.props);
 

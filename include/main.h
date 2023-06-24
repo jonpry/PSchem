@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <any>
+#include "include/core/SkImage.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkFont.h"
@@ -103,7 +104,7 @@ class Text : public Drawable{
     void flip();
     
     const char *ClassName() { return "Text"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x,1.0f),GuiProp("y",&pt.m_y,1.0f),GuiProp("symbol",&text)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x",&pt.m_x,1.0f),GuiProp("y",&pt.m_y,1.0f),GuiProp("text",&text)};}
     
     std::string text;
     float size;
@@ -161,10 +162,13 @@ class Box : public Drawable{
     Box(int layer, float x1, float y1, float x2, float y2, anydict_t props);
     void draw(SkPaint &paint, DrawContext& ctx);
     const char *ClassName() { return "Box"; }
-    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x,1.0f),GuiProp("y1",&p1.m_y,1.0f),GuiProp("x2",&p2.m_x,1.0f),GuiProp("y2",&p2.m_y,1.0f)};}
+    std::vector<std::any> getPropPairs() {return {GuiProp("x1",&p1.m_x,1.0f),GuiProp("y1",&p1.m_y,1.0f),GuiProp("x2",&p2.m_x,1.0f),GuiProp("y2",&p2.m_y,1.0f),GuiProp("alpha",&alpha,.01f,0.0f,1.0f),GuiProp("image",&image)};}
     
     int layer;
+    float alpha;
+    std::string image;
     Point p1,p2;
+    sk_sp<SkImage> sk_image;
  private:
 };
 

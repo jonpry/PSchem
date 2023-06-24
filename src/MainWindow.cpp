@@ -89,7 +89,7 @@ MainWindow::MainWindow(int argc, char** argv, void* platformData)
         
     fImGuiLayer.render();    
     
-    m_drawing = &getDrawing("passgate.sch");
+    m_drawing = &getDrawing("top.sch");//passgate.sch");
 
 }
 

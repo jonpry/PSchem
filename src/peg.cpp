@@ -30,11 +30,11 @@ void test_peg(string filename, vector<Line> &lines, vector<Arc> &arcs, vector<Bo
         Stmt        <- RECORD_ID (Dict/BraceList)? NUMBER* Dict?
         BraceList   <- '{' PROP_STRING '}'
         Dict        <- '{' Item* '}'
-        Item        <- KEY '=' (Value/QUOTED_STRING) LINE_BREAK?
+        Item        <- KEY '=' (Value/QUOTED_STRING) LINE_BREAK*
         KEY         <- < [a-zA-Z_]+ >
         Value       <- NUMBER/BOOL/STRING
         NUMBER      <- FLOAT/INT
-        STRING      <- < [a-zA-Z0-9_]+ >
+        STRING      <- < [a-zA-Z0-9_:/.+=-]+ >
         BOOL        <- 'true' / 'false'
         QUOTED_STRING <-   < ["] (!'"' .)* ["] >
         
